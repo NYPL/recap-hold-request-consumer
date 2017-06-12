@@ -9,7 +9,9 @@ source 'https://rubygems.org'
 gem 'bundler', '= 1.9.9'
 gem 'aws-sdk', '~> 2'
 gem 'json'
-gem 'faker'
+gem 'faraday'
+gem 'faraday_middleware'
+gem 'nokogiri'
 
 # gems in the development group will not be included in the index.zip
 group :development do

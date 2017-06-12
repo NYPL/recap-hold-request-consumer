@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
+require_relative 'models/accept_item_request.rb'
 
-require 'faker'
-
-puts "Hello - '#{Faker::Name.name}' from Ruby!"
+accept_item_request = AcceptItemRequest.new
