@@ -12,6 +12,7 @@ gem 'json'
 gem 'faraday'
 gem 'faraday_middleware'
 gem 'nokogiri'
+gem 'dotenv-rails'
 
 # gems in the development group will not be included in the index.zip
 group :development do
