@@ -1,5 +1,7 @@
 *.gem
 *.rbc
+*.env
+*.DS_Store
 /.config
 .vscode
 /coverage/
@@ -10,6 +12,7 @@
 /test/tmp/
 /test/version_tmp/
 /tmp/
+notes*
 
 # Used by dotenv library to load environment variables.
 # .env

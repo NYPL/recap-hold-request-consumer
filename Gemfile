@@ -8,11 +8,19 @@ source 'https://rubygems.org'
 # DO NOT REMOVE; bundler version MUST match the version that the traveling ruby uses, which is currently 1.9.9.
 gem 'bundler', '= 1.9.9'
 gem 'aws-sdk', '~> 2'
+gem 'aws-kclrb'
 gem 'json'
 gem 'faraday'
 gem 'faraday_middleware'
 gem 'nokogiri'
 gem 'dotenv-rails'
+gem 'avro'
+
+group :test do
+  gem 'rspec'
+  gem 'simplecov'
+  gem 'require_all'
+end
 
 # gems in the development group will not be included in the index.zip
 group :development do
