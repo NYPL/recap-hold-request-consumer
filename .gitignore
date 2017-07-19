@@ -52,3 +52,9 @@ build-iPhoneSimulator/
 
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
+tmp_rumbda
+index.zip
+.env
+deploy.env
+event.json
+.lambda
