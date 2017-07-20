@@ -41,16 +41,8 @@ class HoldRequest
 
     if response.code == "200"
       JSON.parse(response.body)
-    elsif response.code == "404" # Hold request has vanished! oh nooooes. Can't help anything at this point.
-      "404"
-    elsif iteration < 3
-      # could be an outage. let's wait and try again.
-      sleep 3.seconds
-      HoldRequest.find(hold_request_id,iteration+1)
     else
-      puts response.code
-      puts response.body
-      "500"
+      response.code
     end
   end
 

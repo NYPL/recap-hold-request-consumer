@@ -37,7 +37,7 @@ class SierraRequest
 
   def post_request
     return "204" if self.suppressed? 
-    
+
     uri = URI.parse("#{ENV['SIERRA_URL']}/patrons/#{self.patron_id}/holds/requests")
 
     request = Net::HTTP::Post.new(uri)
@@ -63,7 +63,9 @@ class SierraRequest
   end
 
   def self.process_request(json_data)
-    hold_request = HoldRequest.find json_data["id"] # should be safe. should have already verified that this works.
+    hold_request = HoldRequest.find json_data["id"] 
+    
+    return "404" if hold_request["data"] == nil
 
     sierra_request = SierraRequest.new(json_data)
     sierra_request.patron_id = hold_request["data"]["patron"]
