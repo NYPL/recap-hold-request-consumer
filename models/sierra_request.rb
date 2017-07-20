@@ -36,6 +36,8 @@ class SierraRequest
   end
 
   def post_request
+    return "204" if self.suppressed? 
+    
     uri = URI.parse("#{ENV['SIERRA_URL']}/patrons/#{self.patron_id}/holds/requests")
 
     request = Net::HTTP::Post.new(uri)
@@ -57,7 +59,7 @@ class SierraRequest
       http.request(request)
     end
 
-    response.body
+    response.code # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along. 
   end
 
   def self.process_request(json_data)

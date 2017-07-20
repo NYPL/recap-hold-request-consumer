@@ -31,5 +31,14 @@ describe "sierra request" do
   it "should post json message to sierra" do
     expect(SierraRequest.respond_to?(:process_request)).to eq(true)
     expect(suppressed_sierra_req.respond_to?(:post_request)).to eq(true)
+    expect(suppressed_sierra_req.post_request).to eq("204") # because by default it should be considered a success, no matter what. 
+  end
+
+  it "should return 404 if passed garbage data or not enough data and is not suppressed" do
+    expect(unsuppressed_sierra_req.post_request).to eq("404") # because it's missing key ingredients
+  end
+
+  it "should automatically return 204 if suppressed" do
+    expect(suppressed_sierra_req.post_request).to eq("204") # because by default it should be considered a success, no matter what.
   end
 end
