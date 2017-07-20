@@ -22,4 +22,9 @@ describe "NCIP request" do
     expect(valid_request.respond_to?(:post_record)).to eq(true)
     expect(valid_request.post_record.scan("Problem")).to eq([])
   end
+
+  it "should return nil for an invalid request string" do
+    expect(AcceptItemRequest.process_request({})).to eq("404")
+    expect(AcceptItemRequest.new.post_record).to eq("404")
+  end
 end

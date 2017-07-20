@@ -42,6 +42,10 @@ class AcceptItemRequest
 
   def self.process_request(json_data)
     hold_request    = HoldRequest.find(json_data["id"])
+    
+    return "404" if hold_request["data"] == nil
+    return "500" if json_data["description"] == nil 
+
     hold_data       = hold_request["data"]
     borrowerId      = hold_data["patron"]
     itemBarcode     = hold_data["record"]
@@ -75,7 +79,7 @@ class AcceptItemRequest
       end
       res = response.body
     else
-      res = nil
+      res = "404"
     end
     res
   end
