@@ -38,6 +38,7 @@ package: ## Package the code for AWS Lambda
 	@cp config/var_dev.env $(LAMBDADIR)/var_app
 	@cp events/test_kinesis.json $(LAMBDADIR)/test_kinesis.json
 	@cp RecapHoldRequest.avsc $(LAMBDADIR)/RecapHoldRequest.avsc
+	@cp HoldRequestResult.avsc $(LAMBDADIR)/HoldRequestResult.avsc
 	@cp -pR vendor $(LAMBDADIR)/lib/
 	@rm -fr $(LAMBDADIR)/lib/vendor/ruby/2.2.0/extensions
 	@tar -xzf resources/nokogiri-1.6.6.2.tar.gz -C $(LAMBDADIR)/lib/vendor/ruby/
@@ -50,7 +51,7 @@ package: ## Package the code for AWS Lambda
 	@cp resources/wrapper.sh $(LAMBDADIR)/rhrc
 	@chmod +x $(LAMBDADIR)/rhrc
 	@cp resources/index.js $(LAMBDADIR)/
-	@cd $(LAMBDADIR) && zip -r rhrc.zip rhrc index.js var_app test_kinesis.json RecapHoldRequest.avsc lib/ > /dev/null
+	@cd $(LAMBDADIR) && zip -r rhrc.zip rhrc index.js var_app test_kinesis.json RecapHoldRequest.avsc HoldRequestResult.avsc lib/ > /dev/null
 	@mkdir deploy
 	@cd $(LAMBDADIR) && mv rhrc.zip ../deploy/
 	@echo '... Done.'

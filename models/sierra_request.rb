@@ -2,7 +2,7 @@ class SierraRequest
   require 'json'
   require 'net/http'
   require 'uri'
-  attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :request_uri
+  attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :request_uri
 
   SUPPRESSION_CODES = ['NE', 'GO', 'NC', 'NI', 'NK', 'NS', 'NT', 'NU', 'NV', 'NX', 'NY', 'SA', 'SM', 'SP']
 
@@ -32,7 +32,7 @@ class SierraRequest
   end
 
   def suppressed?
-    json_body["data"]["deliveryLocation"] && SUPPRESSION_CODES.include?(json_body["data"]["deliveryLocation"])
+    self.delivery_location != nil && SUPPRESSION_CODES.include?(self.delivery_location)
   end
 
   def post_request
@@ -43,11 +43,10 @@ class SierraRequest
     request = Net::HTTP::Post.new(uri)
     request.content_type = "application/json"
     request["Authorization"] = "Bearer #{SierraRequest.get_bearer}"
-    request["Cache-Control"] = "no-cache"
     
     request.body = JSON.dump({
       "recordType" => "i", #TODO: This may change at a later date, but for now we are only doing item requests. KAK.
-      "recordNumber" => self.record_number,
+      "recordNumber" => self.record_number.to_i,
       "pickupLocation" => self.pickup_location
     })
 
@@ -58,27 +57,29 @@ class SierraRequest
     response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
       http.request(request)
     end
-
+    puts response.body
     response.code # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along. 
   end
 
   def self.process_request(json_data)
-    hold_request = HoldRequest.find json_data["id"] 
+    hold_request = HoldRequest.find json_data["trackingId"] 
     
-    return "404" if hold_request["data"] == nil
+    return { "code" => "404" } if hold_request["data"] == nil
 
     sierra_request = SierraRequest.new(json_data)
     sierra_request.patron_id = hold_request["data"]["patron"]
     sierra_request.record_number = hold_request["data"]["record"]
+    sierra_request.delivery_location = hold_request["data"]["deliveryLocation"]
 
-    if hold_request["data"]["pickupLocation"] != nil || hold_request["data"]["pickupLocation"] != []
+    if hold_request["data"]["pickupLocation"] != nil && hold_request["data"]["pickupLocation"] != [] && hold_request["data"]["pickupLocation"] != ""
       sierra_request.pickup_location = hold_request["data"]["pickupLocation"]
     else
       sierra_request.pickup_location = Location.get_pickup_for(hold_request["data"]["deliveryLocation"])
     end
 
     response = sierra_request.post_request
-    response
+    puts response
+    return { "code" => response } 
   end
 
 end

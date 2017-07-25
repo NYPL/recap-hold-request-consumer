@@ -13,8 +13,10 @@ describe "authorization" do
 end
 
 describe "sierra request" do
-  suppressed_sierra_req     = SierraRequest.new({"data" => { "deliveryLocation" => "NV"}})
-  unsuppressed_sierra_req   = SierraRequest.new({"data" => { "deliveryLocation" => "COOPER"}})
+  suppressed_sierra_req                     = SierraRequest.new({"data" => {}})
+  suppressed_sierra_req.delivery_location   = "NV"
+  unsuppressed_sierra_req                   = SierraRequest.new({"data" => {}})
+  unsuppressed_sierra_req.delivery_location = "COOPER"
 
   it "should check for suppression" do
     expect(suppressed_sierra_req.respond_to?(:suppressed?)).to eq(true)
@@ -34,12 +36,14 @@ describe "sierra request" do
   end
 
   it "should return 404 if passed garbage data or not enough data and is not suppressed" do
-    expect(SierraRequest.process_request({"data" => { "deliveryLocation" => "COOPER"}})).to eq("404")
+    sierra_res = SierraRequest.process_request({"data" => { "deliveryLocation" => "COOPER"}})
+    expect(sierra_res["code"]).to eq("404")
     expect(unsuppressed_sierra_req.post_request).to eq("404") # because it's missing key ingredients
   end
 
   it "should automatically return 204 if suppressed" do
-    expect(SierraRequest.process_request({"data" => { "deliveryLocation" => "NV"}})).to eq("404") # when it can't actually find a matching hold request, it should be reported
+    sierra_res = SierraRequest.process_request({"data" => { "deliveryLocation" => "NV"}})
+    expect(sierra_res["code"]).to eq("404") # when it can't actually find a matching hold request, it should be reported
     expect(suppressed_sierra_req.post_request).to eq("204") # if hold request vaild, by default it should be considered a success, no matter what.
   end
 end

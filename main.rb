@@ -25,22 +25,23 @@ else
 end
 
 event["Records"].each do |kinesis_record|
-  begin
+  # begin
     puts "Processing an event ... "
     json_data = Stream.decode(kinesis_record["kinesis"]["data"])
-    owner = json_data["owningInstitutionId"].downcase
+    hold_request = HoldRequest.find json_data["trackingId"]
 
-    hold_request = HoldRequest.find json_data["id"]
     if hold_request == "404"
-      response = "ERROR - Unable to find original hold request. #{kinesis_record}"
-    elsif owner.scan('nypl').empty?
-      response = AcceptItemRequest.process_request(json_data)
+      puts "404 - No hold request found"
+      { "code" => "404", "message" => "ERROR - Unable to find original hold request. #{kinesis_record}" }
     else
-      response = SierraRequest.process_request(json_data)
+      puts "Routing hold request ... "
+      puts json_data
+      puts hold_request
+      HoldRequest.new.route_request_with(json_data,hold_request)
     end
-    RequestResult.process_response(response)
-  rescue Exception => e
-    response = "ERROR - Unparseable data sent to RecapHoldRequestConsumer via ReCAP. #{kinesis_record}"
-    RequestResult.process_response(response)
-  end
+  # rescue Exception => e
+  #   response = "ERROR - Unparseable data sent to RecapHoldRequestConsumer via ReCAP. #{kinesis_record}"
+  #   puts response
+  #   {"code" => "500", "message" => response}
+  # end
 end

@@ -46,21 +46,22 @@ class HoldRequest
     end
   end
 
-  def self.list
-    uri = URI.parse("#{ENV['HOLD_REQUESTS_URL']}/hold-requests")
-    request = Net::HTTP::Get.new(uri)
-    request.content_type = "application/json"
-    request["Accept"] = "application/json"
-    request["Authorization"] = "Bearer #{self.get_bearer}"
+  def route_request_with(json_data,hold_request)
+    puts "JSON data ... #{json_data}"
+    puts "Hold request... #{hold_request}"
+    
+    return {"code" => "500", "type" => "unknown" } if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil 
 
-    req_options = {
-      use_ssl: uri.scheme == "https"
-    }
+    owner = json_data["owningInstitutionId"].downcase
 
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-      http.request(request)
+    if owner.scan('nypl').empty?
+      puts "Processing non-NYPL hold ... "
+      response = AcceptItemRequest.process_request(json_data)
+      RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request)
+    else
+      puts "Processing NYPL hold ..."
+      response = SierraRequest.process_request(json_data)
+      RequestResult.process_response(response,'SierraRequest',json_data, hold_request)
     end
-
-    JSON.parse(response.body)
   end
 end

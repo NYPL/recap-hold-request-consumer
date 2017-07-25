@@ -41,10 +41,10 @@ class AcceptItemRequest
   end
 
   def self.process_request(json_data)
-    hold_request    = HoldRequest.find(json_data["id"])
+    hold_request    = HoldRequest.find(json_data["trackingId"])
     
-    return "404" if hold_request["data"] == nil
-    return "500" if json_data["description"] == nil 
+    return {"code" => "404", "message" => "missing hold request data" } if hold_request["data"] == nil
+    return {"code" => "500", "message" => "missing item description data" } if json_data["description"] == nil 
 
     hold_data       = hold_request["data"]
     borrowerId      = hold_data["patron"]
@@ -77,11 +77,12 @@ class AcceptItemRequest
       response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
         http.request(request)
       end
-      res = response.body
+      puts response
+      { "code" => response.code, "message" => response.body }
     else
-      res = "404"
+      puts "404 - ncip request string blank"
+      { "code" => "404", "message" => "ncip request string blank" }
     end
-    res
   end
 
 end

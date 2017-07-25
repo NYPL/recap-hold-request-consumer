@@ -1,39 +1,42 @@
 {
-	"name": "HoldRequestResult",
-	"type": "record",
-	"fields": [{
-			"name": "jobId",
-			"type": [
-				"null",
-				"string"
-			]
-		},
-		{
-			"name": "success",
-			"type": "boolean"
-		},
-		{
-			"name": "error",
-			"type": [
-				"null",
-				{
-					"name": "Error",
-					"type": "record",
-					"fields": [{
-							"name": "message",
-							"type": "string"
-						},
-						{
-							"name": "type",
-							"type": "string"
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "holdRequestId",
-			"type": "int"
-		}
-	]
-}
+      "name": "HoldRequestResult",
+      "type": "record",
+      "fields": [
+        {
+          "name": "jobId",
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        {
+          "name": "success",
+          "type": "boolean"
+        },
+        {
+          "name": "error",
+          "default": null,
+          "type": [
+            "null",
+            {
+              "name": "Error",
+              "type": "record",
+              "fields": [
+                {
+                  "name": "message",
+                  "type": "string"
+                },
+                {
+                  "name": "type",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "holdRequestId",
+          "type": "int"
+        }
+      ]
+    }

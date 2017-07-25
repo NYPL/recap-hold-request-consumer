@@ -1,7 +1,7 @@
 require 'simplecov'
 require 'dotenv'
 
-Dotenv.load('.env', 'var_app', './config/var_app')
+Dotenv.load('./config/var_test.env')
 
 SimpleCov.start do
   add_filter 'test/'

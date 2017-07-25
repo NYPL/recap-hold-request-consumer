@@ -6,3 +6,7 @@ describe "initial test" do
     expect(true).to be true
   end
 end
+
+describe "main fuction" do
+
+end
