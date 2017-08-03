@@ -14,7 +14,7 @@ describe "NCIP request" do
   valid_request = AcceptItemRequest.new 
 
   it "should build an xml string and assign it to valid_request.request_string" do
-    valid_request.build_request_string(234567890987654, Random.rand(10000000...19999999999), "lb", "blueRose430", "Dr Jacoby", "Golden Shovels")
+    valid_request.build_request_string(23333102394119, Random.rand(10000000...19999999999), "lb", "blueRose430", "Dr Jacoby", "Golden Shovels")
     expect(valid_request.request_string).to_not be_nil
   end
 
@@ -26,5 +26,9 @@ describe "NCIP request" do
   it "should return nil for an invalid request string" do
     expect(AcceptItemRequest.process_request({})["code"]).to eq("404")
     expect(AcceptItemRequest.new.post_record["code"]).to eq("404")
+  end
+
+  it "should return success as false if request comes back with a problem" do
+    expect(valid_request.post_record["code"]).to eq("500") # should already exist. 
   end
 end

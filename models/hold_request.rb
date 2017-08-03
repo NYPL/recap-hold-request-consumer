@@ -47,19 +47,17 @@ class HoldRequest
   end
 
   def route_request_with(json_data,hold_request)
-    puts "JSON data ... #{json_data}"
-    puts "Hold request... #{hold_request}"
     
     return {"code" => "500", "type" => "unknown" } if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil 
 
     owner = json_data["owningInstitutionId"].downcase
 
     if owner.scan('nypl').empty?
-      puts "Processing non-NYPL hold ... "
+      CustomLogger.new({ "level" => "INFO", "message" => "Processing partner hold"}).log_message
       response = AcceptItemRequest.process_request(json_data)
       RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request)
     else
-      puts "Processing NYPL hold ..."
+      CustomLogger.new({ "level" => "INFO", "message" => "Processing NYPL hold"}).log_message
       response = SierraRequest.process_request(json_data)
       RequestResult.process_response(response,'SierraRequest',json_data, hold_request)
     end

@@ -37,6 +37,7 @@ class AcceptItemRequest
               <PickupLocation>#{pickupLocation}</PickupLocation>
           </AcceptItem>
       </NCIPMessage>}
+    CustomLogger.new({ "level" => "INFO", "message" => "Contructed XML string: #{string}"}).log_message
     self.request_string = string
   end
 
@@ -47,15 +48,22 @@ class AcceptItemRequest
     return {"code" => "500", "message" => "missing item description data" } if json_data["description"] == nil 
 
     hold_data       = hold_request["data"]
-    borrowerId      = hold_data["patron"]
-    itemBarcode     = hold_data["record"]
-    pickupLocation  = hold_data["pickupLocation"]
-    
+    borrowerId      = json_data["patronBarcode"]
+    itemBarcode     = json_data["itemBarcode"]
+
+    if hold_data["pickupLocation"] != nil && hold_data["pickupLocation"] != [] && hold_data["pickupLocation"] != ""
+      pickupLocation  = hold_data["pickupLocation"]
+    else
+      pickupLocation = Location.get_pickup_for(hold_data["deliveryLocation"])
+    end
+
     callNumber      = json_data["description"]["callNumber"]
     author          = json_data["description"]["author"]
     title           = json_data["description"]["title"]
     
     new_request     = AcceptItemRequest.new
+    
+    # default 23333102394119
     new_request.build_request_string(borrowerId, itemBarcode, pickupLocation, callNumber, author, title)
     result = new_request.post_record
   end
@@ -77,10 +85,19 @@ class AcceptItemRequest
       response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
         http.request(request)
       end
-      puts response
-      { "code" => response.code, "message" => response.body }
+
+      CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
+
+      problem = response.body.scan("Problem")
+      if problem.join(',').length != 0
+        code = "500"
+      else
+        code = "200" 
+      end
+
+      { "code" => code, "message" => response.body }
     else
-      puts "404 - ncip request string blank"
+      CustomLogger.new({ "level" => "WARNING", "message" => "ncip request string blank"}).log_message
       { "code" => "404", "message" => "ncip request string blank" }
     end
   end
