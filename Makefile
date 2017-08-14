@@ -58,7 +58,7 @@ package: ## Package the code for AWS Lambda
 
 create: ## Creates an AWS lambda function
 	aws lambda create-function \
-		--function-name RecapHoldRequestConsumer \
+		--function-name recapHoldRequestConsumer-development \
 		--handler index.handler \
 		--runtime nodejs4.3 \
 		--memory 1024 \
@@ -69,17 +69,17 @@ create: ## Creates an AWS lambda function
 
 publish: package ## Deploys the latest version to AWS
 	aws lambda update-function-code \
-		--function-name RecapHoldRequestConsumer \
+		--function-name recapHoldRequestConsumer-development \
 		--zip-file fileb://./deploy/rhrc.zip
 
 delete: ## Removes the Lambda
-	aws lambda delete-function --function-name RecapHoldRequestConsumer
+	aws lambda delete-function --function-name recapHoldRequestConsumer-development
 
 invoke: ## Invoke the AWS Lambda in the command line
 	rm -fr tmp && mkdir tmp
 	aws lambda invoke \
 	--invocation-type RequestResponse \
-	--function-name RecapHoldRequestConsumer \
+	--function-name recapHoldRequestConsumer-development \
 	--log-type Tail \
 	--region us-east-1 \
 	--payload '{"name":"John Adam Smith"}' \

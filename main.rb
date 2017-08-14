@@ -27,14 +27,16 @@ event["Records"].each do |kinesis_record|
   begin
     json_data = Stream.decode(kinesis_record["kinesis"]["data"])
     hold_request = HoldRequest.find json_data["trackingId"]
-    if hold_request == "404"
-      CustomLogger.new("level" => "ERROR", "message" => "No hold request found", "error_codename" => "ERASER")
+    
+    if hold_request == "404" || hold_request == "500"
+      CustomLogger.new("level" => "ERROR", "message" => "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER").log_message
+      RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
     else
-      CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data: #{json_data}")
-      CustomLogger.new("level" => "INFO", "message" => "Found hold request data: #{hold_request}")
+      CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data: #{json_data}").log_message
+      CustomLogger.new("level" => "INFO", "message" => "Found hold request data: #{hold_request}").log_message
       HoldRequest.new.route_request_with(json_data,hold_request)
     end
   rescue Exception => e
-    CustomLogger.new("level" => "ERROR", "message" => "Unparseable data sent to RecapHoldRequestConsumer via ReCAP. #{kinesis_record}", "error_codename" => "ROGET")
+    CustomLogger.new("level" => "ERROR", "message" => "Unparseable data sent to RecapHoldRequestConsumer via ReCAP. #{kinesis_record}", "error_codename" => "ROGET").log_message
   end
 end

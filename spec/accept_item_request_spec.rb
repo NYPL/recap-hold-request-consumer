@@ -25,7 +25,7 @@ describe "NCIP request" do
 
   it "should return nil for an invalid request string" do
     expect(AcceptItemRequest.process_request({})["code"]).to eq("404")
-    expect(AcceptItemRequest.new.post_record["code"]).to eq("404")
+    expect(AcceptItemRequest.new.post_record["code"]).to eq("500")
   end
 
   it "should return success as false if request comes back with a problem" do

@@ -12,9 +12,9 @@ class Stream
 
     avro_string = Base64.decode64(encoded_data_string)
     stringreader = StringIO.new(avro_string)
-	  decoder = Avro::IO::BinaryDecoder.new(stringreader)
-	  datumreader = Avro::IO::DatumReader.new(schema)
-	  read_value = datumreader.read(decoder)
+    decoder = Avro::IO::BinaryDecoder.new(stringreader)
+    datumreader = Avro::IO::DatumReader.new(schema)
+    read_value = datumreader.read(decoder)
 
     read_value
   end

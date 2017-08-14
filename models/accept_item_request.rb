@@ -80,6 +80,7 @@ class AcceptItemRequest
 
       req_options = {
         use_ssl: uri.scheme == "https",
+        read_timeout: 500
       }
 
       response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
@@ -89,7 +90,7 @@ class AcceptItemRequest
       CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
 
       problem = response.body.scan("Problem")
-      if problem.join(',').length != 0
+      if response.code != "200" || problem.join(',').length != 0
         code = "500"
       else
         code = "200" 
@@ -98,7 +99,7 @@ class AcceptItemRequest
       { "code" => code, "message" => response.body }
     else
       CustomLogger.new({ "level" => "WARNING", "message" => "ncip request string blank"}).log_message
-      { "code" => "404", "message" => "ncip request string blank" }
+      { "code" => "500", "message" => "ncip request string blank" }
     end
   end
 

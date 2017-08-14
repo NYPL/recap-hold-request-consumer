@@ -32,7 +32,12 @@ exports.handler = function(event, context) {
     return false;
   }
 
+  spawnedProcess.stdout.toString().split("\n").map(function (message) {
+    console.log("Test change.");
+    if (message.trim().length) console.log(message);
+  });
 
-  console.log('stdout: ' + spawnedProcess.stdout);
-  console.log('stderr: ' + spawnedProcess.stderr);
+  spawnedProcess.stderr.toString().split("\n").map(function (message) {
+    if (message.trim().length) console.log(message);
+  });
 };

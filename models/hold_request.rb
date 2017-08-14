@@ -47,16 +47,19 @@ class HoldRequest
   end
 
   def route_request_with(json_data,hold_request)
-    
-    return {"code" => "500", "type" => "unknown" } if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil 
+    owner = ""
 
-    owner = json_data["owningInstitutionId"].downcase
+    if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil
+      CustomLogger.new({"level" => "ERROR", "message" => "Request data missing key information. Cannot proceed. Malformed request. #{json_data}"}).log_message
+    else 
+      owner = json_data["owningInstitutionId"].downcase
+    end
 
     if owner.scan('nypl').empty?
       CustomLogger.new({ "level" => "INFO", "message" => "Processing partner hold"}).log_message
       response = AcceptItemRequest.process_request(json_data)
       RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request)
-    else
+    elsif owner != ""
       CustomLogger.new({ "level" => "INFO", "message" => "Processing NYPL hold"}).log_message
       response = SierraRequest.process_request(json_data)
       RequestResult.process_response(response,'SierraRequest',json_data, hold_request)

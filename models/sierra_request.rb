@@ -64,21 +64,21 @@ class SierraRequest
       http.request(request)
     end
 
-    CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, request: #{request.body}"}).log_message
-    response.code # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along. 
+    CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, request: #{request.body}, response: #{response.body}"}).log_message
+    response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along. 
   end
 
   def self.process_request(json_data, hold_request_data={})
     hold_request = hold_request_data == {} ? HoldRequest.find(json_data["trackingId"]) : hold_request_data
 
-    return { "code" => "404" } if hold_request["data"] == nil
+    return { "code" => "404", "message" => "Hold request not found." } if hold_request["data"] == nil
 
     sierra_request = SierraRequest.build_new_sierra_request(hold_request["data"])
 
     response = sierra_request.post_request
     CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
 
-    return { "code" => response } 
+    return { "code" => response.code, "message" => response.body } 
   end
 
   def self.build_new_sierra_request(hold_request_data)

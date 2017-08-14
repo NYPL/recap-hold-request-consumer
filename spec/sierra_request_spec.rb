@@ -70,7 +70,7 @@ describe "sierra request" do
   it "should return 404 if passed garbage data or not enough data and is not suppressed" do
     sierra_res = SierraRequest.process_request({"data" => { "deliveryLocation" => "COOPER"}})
     expect(sierra_res["code"]).to eq("404")
-    expect(unsuppressed_sierra_req.post_request).to eq("404") # because it's missing key ingredients
+    expect(unsuppressed_sierra_req.post_request.code).to eq("404") # because it's missing key ingredients
   end
 
   it "should return code from sierra request" do
@@ -124,12 +124,12 @@ describe "sierra request" do
     bad_sierra_request.assign_bearer
 
     bad_sierra_request.base_request_url = ENV['MOCKY_TIMEOUT_URL']
-    expect(bad_sierra_request.post_request).to eq("408")
+    expect(bad_sierra_request.post_request.code).to eq("408")
 
     bad_sierra_request.base_request_url = ENV['MOCKY_404_URL']
-    expect(bad_sierra_request.post_request).to eq("404")
+    expect(bad_sierra_request.post_request.code).to eq("404")
 
     bad_sierra_request.base_request_url = ENV["MOCKY_500_URL"]
-    expect(bad_sierra_request.post_request).to eq("500")
+    expect(bad_sierra_request.post_request.code).to eq("500")
   end
 end
