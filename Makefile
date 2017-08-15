@@ -59,7 +59,7 @@ create: ## Creates an AWS lambda function
 	aws lambda create-function \
 		--function-name RecapHoldRequestConsumer-development \
 		--handler index.handler \
-		--runtime nodejs4.3 \
+		--runtime nodejs6.10 \
 		--memory 1024 \
 		--timeout 10 \
 		--description "Processes hold requests from recap" \

@@ -33,7 +33,6 @@ exports.handler = function(event, context) {
   }
 
   spawnedProcess.stdout.toString().split("\n").map(function (message) {
-    console.log("Test change.");
     if (message.trim().length) console.log(message);
   });
 
