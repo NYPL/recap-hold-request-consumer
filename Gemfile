@@ -17,3 +17,4 @@ gem 'pry'
 gem 'avromatic'
 gem 'avro-patches'
 gem 'oauth'
+gem 'rubocop', require: false

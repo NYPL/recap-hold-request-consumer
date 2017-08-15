@@ -41,7 +41,6 @@ package: ## Package the code for AWS Lambda
 	@cp HoldRequestResult.avsc $(LAMBDADIR)/HoldRequestResult.avsc
 	@cp -pR vendor $(LAMBDADIR)/lib/
 	@rm -fr $(LAMBDADIR)/lib/vendor/ruby/2.2.0/extensions
-	@tar -xzf resources/nokogiri-1.6.6.2.tar.gz -C $(LAMBDADIR)/lib/vendor/ruby/
 	@tar -xzf resources/json-1.8.2.tar.gz -C $(LAMBDADIR)/lib/vendor/ruby/
 	@rm -f $(LAMBDADIR)/lib/vendor/*/*/cache/*
 	@mkdir -p $(LAMBDADIR)/lib/vendor/.bundle
@@ -58,7 +57,7 @@ package: ## Package the code for AWS Lambda
 
 create: ## Creates an AWS lambda function
 	aws lambda create-function \
-		--function-name recapHoldRequestConsumer-development \
+		--function-name RecapHoldRequestConsumer-development \
 		--handler index.handler \
 		--runtime nodejs4.3 \
 		--memory 1024 \
@@ -67,24 +66,18 @@ create: ## Creates an AWS lambda function
 		--role arn:aws:iam::224280085904:role/lambda_basic_execution \
 		--zip-file fileb://./deploy/rhrc.zip
 
-publish: package ## Deploys the latest version to AWS
+deploy_development: package ## Deploys the latest version to AWS development
 	aws lambda update-function-code \
-		--function-name recapHoldRequestConsumer-development \
+		--function-name RecapHoldRequestConsumer-development \
 		--zip-file fileb://./deploy/rhrc.zip
 
-delete: ## Removes the Lambda
-	aws lambda delete-function --function-name recapHoldRequestConsumer-development
+deploy_production: package ## Deploys the latest version to AWS development
+	aws lambda update-function-code \
+		--function-name RecapHoldRequestConsumer-production \
+		--zip-file fileb://./deploy/rhrc.zip
 
-invoke: ## Invoke the AWS Lambda in the command line
-	rm -fr tmp && mkdir tmp
-	aws lambda invoke \
-	--invocation-type RequestResponse \
-	--function-name recapHoldRequestConsumer-development \
-	--log-type Tail \
-	--region us-east-1 \
-	--payload '{"name":"John Adam Smith"}' \
-	tmp/outfile.txt \
-	| jq -r '.LogResult' | base64 -D
+delete_development: ## Removes the Lambda
+	aws lambda delete-function --function-name RecapHoldRequestConsumer-development
 
 .PHONY: help
 
