@@ -3,14 +3,10 @@ class RequestResult
 
   def self.send_message(json_message)
     message = Stream.encode(json_message)
-    client = Aws::Kinesis::Client.new(
-      access_key_id: ENV['ACCESS_KEY_ID'],
-      secret_access_key: ENV['SECRET_ACCESS_KEY'],
-      region: 'us-east-1'
-    )
+    client = Aws::Kinesis::Client.new
 
     resp = client.put_record({
-      stream_name: "HoldRequestResult",
+      stream_name: ENV["HOLD_REQUEST_RESULT_STREAM"],
       data: message,
       partition_key: SecureRandom.hex(20)
     })

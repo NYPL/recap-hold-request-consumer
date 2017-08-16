@@ -59,6 +59,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday_middleware (0.11.0.1)
       faraday (>= 0.7.4, < 1.0)
+    gibberish (2.1.0)
     httparty (0.15.5)
       multi_xml (>= 0.5.2)
     i18n (0.8.4)
@@ -134,6 +135,7 @@ DEPENDENCIES
   faker
   faraday
   faraday_middleware
+  gibberish
   httparty
   json (= 1.8.2)
   oauth

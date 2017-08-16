@@ -5,25 +5,6 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 .DEFAULT_GOAL := help
 
-run: ## Runs the code locally
-	@echo 'Run the app locally'
-	@echo '-------------------'
-	@rm -fr $(OSXDIR)
-	@mkdir -p $(OSXDIR)/lib/ruby
-	@tar -xzf resources/traveling-ruby-20150715-2.2.2-osx.tar.gz -C $(OSXDIR)/lib/ruby
-	@mkdir $(OSXDIR)/lib/app
-	@cp main.rb $(OSXDIR)/lib/app/rhrc.rb
-	@mkdir $(OSXDIR)/lib/app/models
-	@cp -pR vendor $(OSXDIR)/lib/
-	@rm -f $(OSXDIR)/lib/vendor/*/*/cache/*
-	@mkdir -p $(OSXDIR)/lib/vendor/.bundle
-	@cp resources/bundler-config $(OSXDIR)/lib/vendor/.bundle/config
-	@cp Gemfile $(OSXDIR)/lib/vendor/
-	@cp Gemfile.lock $(OSXDIR)/lib/vendor/
-	@cp resources/wrapper.sh $(OSXDIR)/rhrc
-	@chmod +x $(OSXDIR)/rhrc
-	@cd $(OSXDIR) && ./rhrc
-
 package: ## Package the code for AWS Lambda
 	@echo 'Package the app for deploy'
 	@echo '--------------------------'
@@ -35,7 +16,7 @@ package: ## Package the code for AWS Lambda
 	@cp main.rb $(LAMBDADIR)/lib/app/rhrc.rb
 	@mkdir $(LAMBDADIR)/lib/app/models
 	@cp models/*.rb $(LAMBDADIR)/lib/app/models/
-	@cp config/var_dev.env $(LAMBDADIR)/var_app
+	@cp config/var_deploy.env $(LAMBDADIR)/var_app
 	@cp events/test_kinesis.json $(LAMBDADIR)/test_kinesis.json
 	@cp RecapHoldRequest.avsc $(LAMBDADIR)/RecapHoldRequest.avsc
 	@cp HoldRequestResult.avsc $(LAMBDADIR)/HoldRequestResult.avsc
@@ -55,7 +36,9 @@ package: ## Package the code for AWS Lambda
 	@cd $(LAMBDADIR) && mv rhrc.zip ../deploy/
 	@echo '... Done.'
 
-create: ## Creates an AWS lambda function
+create_development: ## Creates an AWS lambda function
+	@cp config/var_dev.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=development
 	aws lambda create-function \
 		--function-name RecapHoldRequestConsumer-development \
 		--handler index.handler \
@@ -66,18 +49,44 @@ create: ## Creates an AWS lambda function
 		--role arn:aws:iam::224280085904:role/lambda_basic_execution \
 		--zip-file fileb://./deploy/rhrc.zip
 
-deploy_development: package ## Deploys the latest version to AWS development
+deploy_development:  ## Deploys the latest version to AWS development
+	@cp config/var_dev.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=development
+	@make package
 	aws lambda update-function-code \
 		--function-name RecapHoldRequestConsumer-development \
-		--zip-file fileb://./deploy/rhrc.zip
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile development
 
-deploy_production: package ## Deploys the latest version to AWS development
+deploy_production: ## Deploys the latest version to AWS development
+	@cp config/var_prod.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=production
+	@make package
 	aws lambda update-function-code \
 		--function-name RecapHoldRequestConsumer-production \
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile production
+
+create_production: 
+	@cp config/var_prod.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=production
+	aws lambda create-function \
+		--function-name RecapHoldRequestConsumer-production \
+		--handler index.handler \
+		--runtime nodejs6.10 \
+		--memory 1024 \
+		--timeout 10 \
+		--description "Processes hold requests from recap" \
+		--role arn:aws:iam::946183545209:role/lambda-full-access \
 		--zip-file fileb://./deploy/rhrc.zip
 
 delete_development: ## Removes the Lambda
+	@export AWS_DEFAULT_PROFILE=development
 	aws lambda delete-function --function-name RecapHoldRequestConsumer-development
+
+delete_production: ## Removes the lambda
+	@export AWS_DEFAULT_PROFILE=production
+	aws lambda delete-function --function-name RecapHoldRequestConsumer-production
 
 .PHONY: help
 
