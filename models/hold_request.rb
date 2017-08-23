@@ -6,7 +6,10 @@ class HoldRequest
   def self.get_bearer
     uri = URI.parse(ENV['RECAP_HOLD_REQUEST_AUTH_URL'])
     request = Net::HTTP::Post.new(uri)
-    request.basic_auth(ENV['RECAP_CLIENT_ID'], ENV['RECAP_CLIENT_SECRET'])
+
+    request.basic_auth(ENV['RECAP_CLIENT_ID'], Kms.decrypt(ENV['ENCODED_RECAP_CLIENT_SECRET']))
+
+    # request.basic_auth(ENV['RECAP_CLIENT_ID'], ENV['RECAP_CLIENT_SECRET'])
     request.set_form_data(
       "grant_type" => "client_credentials"
     )

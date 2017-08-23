@@ -4,7 +4,7 @@ class SierraRequest
   require 'uri'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
-  SUPPRESSION_CODES = ['NE', 'GO', 'NC', 'NI', 'NK', 'NS', 'NT', 'NU', 'NV', 'NX', 'NY', 'SA', 'SM', 'SP']
+  SUPPRESSION_CODES = ['GO','NC','NY','NI','NK','NT','NX','NV','SM','SA','NS','SP','NE','IN','NU','RR','QP','BD']
 
   def initialize(json_data)
     self.json_body = json_data
@@ -14,7 +14,7 @@ class SierraRequest
     begin
       uri = URI.parse("#{self.base_request_url}/token")
       request = Net::HTTP::Post.new(uri)
-      request.basic_auth(ENV['SIERRA_ID'], ENV['SIERRA_SECRET'])
+      request.basic_auth(Kms.decrypt(ENV['ENCODED_SIERRA_ID']), Kms.decrypt(ENV['ENCODED_SIERRA_SECRET']))
       request.set_form_data(
         "grant_type" => "client_credentials"
       )
