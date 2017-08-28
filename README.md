@@ -13,11 +13,12 @@ Work in this project was based in part on the work by Attila Domokos. Found here
 1. Clone the repo.
 2. Install required dependencies.
    * Run `npm install` to install Node.js packages.
-   * Run `BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor` to install Ruby Gems.
+   * Run `BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor` to install Ruby Gems. The `--path vendor` part is IMPORTANT. Don't forget it. 
    * If you have not already installed `node-lambda` as a global package, run `npm install -g node-lambda`.
+   * This app requires Traveling Ruby, which is a packaged version of ruby capable of being 
 3. Setup [configuration](#configuration) files.
    * Copy `.env.sample` file to `.env`.
-   * Copy `config/var_env.env.sample` to `config/var_dev.env`.
+   * Copy `config/var_env.env.sample` to `config/var_app.env`. 
 
 ## Configuration
 
@@ -55,26 +56,34 @@ This lambda currently deploys to a development and a production environment. Rec
 
 ### Makefile
 
-### var_app
-
-Configures environment variables common to *all* environments.
+The Makefile is responsible for packaging the app and its dependencies and pushing it all to Amazon. 
 
 ### var_*environment*.env
 
-Configures environment variables specific to each environment.
+Configures environment variables specific to each environment. var_dev.env settings will be packaged on development deployment. var_prod.env will be packaged on production deployment. var_app.env is for local settings. 
 
-### event_sources_*environment*.json
+### test_kinesis.json
 
-Configures Lambda event sources (triggers) specific to each environment.
+Change this file to configure a test of sample kinesis data. 
 
-## Usage
+### context.json 
+
+An empty hash, but important for node-lambda. 
 
 ### Process a Lambda Event
 
-To use `node-lambda` to process the sample event(s), run:
+To use `node-lambda` to process the sample event(s), run (will process `test_kinesis.json`):
 
 ~~~~
-npm run test
+node-lambda run
+~~~~
+
+Make sure that `RUN_ENV` in `var_app.env` is set to `localhost`, otherwise it will wait for stream events. 
+
+You can also invoke `main.rb` (or any other .rb file in the app) directly by running: 
+
+~~~~
+bundle exec ruby main.rb
 ~~~~
 
 ## Deployment
@@ -82,11 +91,27 @@ npm run test
 To deploy to an environment, run the corresponding command:
 
 ~~~~
-npm run deploy-dev
+make deploy_development
 ~~~~
 
 or
 
 ~~~~
-npm run deploy-qa
+make deploy_production
 ~~~~
+
+## Testing
+
+The unit tests for the app are found in the `spec` directory. To run the full set, run: 
+
+~~~~
+bundle exec rspec
+~~~~
+
+You can also run any of them directly, e.g.: 
+
+~~~~
+bundle exec rspec ./spec/main_spec.rb
+~~~~
+
+Tests currently require a 404, 500, and timeout mocked response (currently set-up to run via `mocky.io`). Examples are included in the sample `var_app.env` file. Make sure they're present and valid before running tests. 
