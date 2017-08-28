@@ -14,7 +14,7 @@ require_relative 'models/location.rb'
 require_relative 'models/custom_logger.rb'
 require_relative 'models/kms.rb'
 
-Dotenv.load('.env', 'var_app', './config/var_app')
+Dotenv.load('.env', './config/var_app.env')
 
 event = []
 

@@ -16,7 +16,7 @@ package: ## Package the code for AWS Lambda
 	@cp main.rb $(LAMBDADIR)/lib/app/rhrc.rb
 	@mkdir $(LAMBDADIR)/lib/app/models
 	@cp models/*.rb $(LAMBDADIR)/lib/app/models/
-	@cp config/var_deploy.env $(LAMBDADIR)/var_app
+	@cp config/var_deploy.env $(LAMBDADIR)/var_app.env
 	@cp events/test_kinesis.json $(LAMBDADIR)/test_kinesis.json
 	@cp RecapHoldRequest.avsc $(LAMBDADIR)/RecapHoldRequest.avsc
 	@cp HoldRequestResult.avsc $(LAMBDADIR)/HoldRequestResult.avsc
