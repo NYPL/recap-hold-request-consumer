@@ -127,7 +127,6 @@ PLATFORMS
 DEPENDENCIES
   avro
   avro-patches
-  avro_turf
   avromatic
   aws-kclrb
   aws-sdk (~> 2)

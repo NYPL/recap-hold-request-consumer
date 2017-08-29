@@ -33,8 +33,8 @@ event["Records"].each do |kinesis_record|
       CustomLogger.new("level" => "ERROR", "message" => "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER").log_message
       RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
     else
-      CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data: #{json_data}").log_message
-      CustomLogger.new("level" => "INFO", "message" => "Found hold request data: #{hold_request}").log_message
+      CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data.").log_message
+      CustomLogger.new("level" => "INFO", "message" => "Found hold request data.").log_message
       HoldRequest.new.route_request_with(json_data,hold_request)
     end
   rescue Exception => e

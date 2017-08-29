@@ -1,15 +1,18 @@
+# Model representing a hold request in a general sense. 
+# Refers to a hold request that has an entry in the postgres database and which has information retrievable via API. 
+# Can be either an NYPL hold or a partner library hold. 
 class HoldRequest
   require 'json'
   require 'net/http'
   require 'uri'
 
+  # Obtains authorization for the request. 
   def self.get_bearer
     uri = URI.parse(ENV['RECAP_HOLD_REQUEST_AUTH_URL'])
     request = Net::HTTP::Post.new(uri)
 
     request.basic_auth(ENV['RECAP_CLIENT_ID'], Kms.decrypt(ENV['ENCODED_RECAP_CLIENT_SECRET']))
 
-    # request.basic_auth(ENV['RECAP_CLIENT_ID'], ENV['RECAP_CLIENT_SECRET'])
     request.set_form_data(
       "grant_type" => "client_credentials"
     )
@@ -27,7 +30,8 @@ class HoldRequest
     end
   end
 
-  def self.find(hold_request_id, iteration=0)
+  # Looks up a hold requests via API. 
+  def self.find(hold_request_id)
     uri = URI.parse("#{ENV['HOLD_REQUESTS_URL']}/hold-requests/#{hold_request_id}")
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"
@@ -49,6 +53,9 @@ class HoldRequest
     end
   end
 
+  # Handles the parsing of the hold request. 
+  # Routes hold requests to post to NCIP if request is a partner hold. 
+  # Routes hold requests to post to Sierra holds if request is an NYPL hold. 
   def route_request_with(json_data,hold_request)
     owner = ""
 

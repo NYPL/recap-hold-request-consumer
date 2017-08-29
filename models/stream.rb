@@ -1,3 +1,4 @@
+# Encoding and decoding messages with AVRO schemas. 
 class Stream
   require 'aws-sdk'
   require 'base64'
@@ -6,7 +7,6 @@ class Stream
 
   # Processes binary and decodes based on avro schema. Takes string, returns JSON hash.
   def self.decode(encoded_data_string)
-    CustomLogger.new({ "level" => "INFO", "message" => "Encoded data: #{encoded_data_string}"}).log_message
     schema = Avro::Schema.parse(File.open("RecapHoldRequest.avsc", "rb").read)
     writer = Avro::IO::DatumWriter.new(schema)
 

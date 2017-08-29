@@ -1,15 +1,19 @@
+# Model represents NYPL hold requests and includes method to post hold to Sierra. 
 class SierraRequest
   require 'json'
   require 'net/http'
   require 'uri'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
+  # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream. 
+  # Technically speaking, they are codes that prevent holds. But we're treating any requests that come through with them as successful. 
   SUPPRESSION_CODES = ['GO','NC','NY','NI','NK','NT','NX','NV','SM','SA','NS','SP','NE','IN','NU','RR','QP','BD']
 
   def initialize(json_data)
     self.json_body = json_data
   end
 
+  # Authorizes the request. 
   def assign_bearer
     begin
       uri = URI.parse("#{self.base_request_url}/token")
@@ -37,10 +41,12 @@ class SierraRequest
     end
   end
 
+  # Uses set SUPPRESSION_CODES array to determine whether a hold is for a suppressed record. 
   def suppressed?
     self.delivery_location != nil && SUPPRESSION_CODES.include?(self.delivery_location)
   end
 
+  # Posts the processed request to Sierra. 
   def post_request
     return "204" if self.suppressed? 
     uri = URI.parse("#{self.base_request_url}/patrons/#{self.patron_id}/holds/requests")
@@ -64,10 +70,12 @@ class SierraRequest
       http.request(request)
     end
 
-    CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, request: #{request.body}, response: #{response.body}"}).log_message
+    CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
     response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along. 
   end
 
+  # Returns a 404 if initial Hold Request cannot be found. 
+  # Otherwise, builds the Sierra hold request and posts it. 
   def self.process_request(json_data, hold_request_data={})
     hold_request = hold_request_data == {} ? HoldRequest.find(json_data["trackingId"]) : hold_request_data
 
@@ -81,6 +89,8 @@ class SierraRequest
     return { "code" => response.code, "message" => response.body } 
   end
 
+  # Takes discovered hold request data and builds a valid Sierra requests out of the information provided. 
+  # Also retrieves pickup location code based on presence of pickupLocation or deliveryLocation. 
   def self.build_new_sierra_request(hold_request_data)
     CustomLogger.new("level" => "info", "message" => "Processing Sierra NYPL Request: #{hold_request_data}")
     sierra_request = SierraRequest.new(hold_request_data)

@@ -1,6 +1,8 @@
+# Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise. 
 class RequestResult
   require 'aws-sdk'
 
+  # Sends a JSON message to Kinesis after encoding and formatting it. 
   def self.send_message(json_message)
     message = Stream.encode(json_message)
     client = Aws::Kinesis::Client.new
@@ -25,7 +27,7 @@ class RequestResult
     return_hash
   end
 
-
+  # Crafts a message to post based on all available information. 
   def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message

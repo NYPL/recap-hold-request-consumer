@@ -1,3 +1,4 @@
+# Custom logging model used for building the log messages for CloudWatch monitoring. 
 class CustomLogger
   attr_accessor :level, :message, :level_code, :error_codename, :timestamp
 
@@ -10,6 +11,8 @@ class CustomLogger
                    'ALERT' => 1, 
                    'EMERGENCY' => 0 }
 
+  # Creates a customer logger given a hash. 
+  # Right now, message and level are required, and level must be included in the keys of VALID_LEVELS
   def initialize(hash)
     hash.keys.each do |key|
       m = "#{key}="
@@ -19,6 +22,8 @@ class CustomLogger
     self.timestamp = Time.now if self.timestamp == nil
   end
   
+  # Returns array where first element is true or false, depending on validity of log message. 
+  # Second value reports what's missing. 
   def validity_report
     return_array = [true, ""]
     
@@ -40,16 +45,19 @@ class CustomLogger
     return_array
   end
 
+  # Returns the boolean value of the validity report, being true or false. 
   def valid?
     validity_report[0]
   end
 
+  # Formats the values of level and timestamp and auto-generates level code based on level. 
   def reformat_fields
     self.level = self.level.upcase
     self.level_code = VALID_LEVELS[self.level]
     self.timestamp = self.timestamp.to_time.iso8601
   end
 
+  # If valid, log_message will log JSON to Cloudwatch logs and return 'true', else will return 'false'.
   def log_message
     return valid? if valid? == false
     formatted_message = self.reformat_fields
