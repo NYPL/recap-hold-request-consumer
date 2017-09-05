@@ -59,8 +59,8 @@ class AcceptItemRequest
               </ItemId>
               <ItemOptionalFields>
                   <BibliographicDescription>
-                      <Author>#{author}</Author>
-                      <Title>#{title}</Title>
+                      <Author>#{AcceptItemRequest.escape_characters_in_string(author)}</Author>
+                      <Title>#{AcceptItemRequest.escape_characters_in_string(title)}</Title>
                   </BibliographicDescription>
                   <ItemDescription>
                       <CallNumber>#{callNumber}</CallNumber>
@@ -71,6 +71,12 @@ class AcceptItemRequest
       </NCIPMessage>}
     CustomLogger.new({ "level" => "INFO", "message" => "Contructed XML string: #{string}"}).log_message
     self.request_string = string
+  end
+
+  # need to escape anything unescaped
+  def self.escape_characters_in_string(string)
+    pattern = /(\'|\"|\.|\*|\/|\-|\\|\)|\$|\+|\(|\^|\?|\!|\~|\`)/
+    string.gsub(pattern){|match|"\\"  + match}.encode(:xml => :text)
   end
 
   # Posts the XML record to Sierra NCIP. Returns code and message. 

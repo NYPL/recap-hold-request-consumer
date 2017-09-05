@@ -86,7 +86,11 @@ class SierraRequest
     response = sierra_request.post_request
     CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
 
-    return { "code" => response.code, "message" => response.body } 
+    if response.is_a? String
+      return { "code" => response, "message" => "Suppressed." }
+    else
+      return { "code" => response.code, "message" => response.body } 
+    end
   end
 
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided. 

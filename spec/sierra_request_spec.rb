@@ -88,7 +88,6 @@ describe "sierra request" do
     hold_request_data = {"patron" => "23338675309", "record" => "42", "deliveryLocation" => "NV"}
 
     new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
-
     expect(new_sierra_request).to_not be(nil)
     expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
     expect(new_sierra_request.record_number).to eq(hold_request_data["record"])

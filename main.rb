@@ -38,6 +38,6 @@ event["Records"].each do |kinesis_record|
       HoldRequest.new.route_request_with(json_data,hold_request)
     end
   rescue Exception => e
-    CustomLogger.new("level" => "ERROR", "message" => "Unparseable data sent to RecapHoldRequestConsumer via ReCAP. #{kinesis_record}", "error_codename" => "ROGET").log_message
+    CustomLogger.new("level" => "ERROR", "message" => "#{e}", "error_codename" => "ROGET").log_message
   end
 end

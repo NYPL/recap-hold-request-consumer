@@ -14,7 +14,7 @@ describe "NCIP request" do
   valid_request = AcceptItemRequest.new 
 
   it "should build an xml string and assign it to valid_request.request_string" do
-    valid_request.build_request_string(23333102394119, Random.rand(10000000...19999999999), "lb", "blueRose430", "Dr Jacoby", "Golden Shovels")
+    valid_request.build_request_string(23333102394119, Random.rand(10000000...19999999999), "lb", "blueRose430", "Dr \\ // <><><><????$$$%@@)()(#@...#@!$%^7$*&*) Jacoby", "Golden Shovels")
     expect(valid_request.request_string).to_not be_nil
   end
 
