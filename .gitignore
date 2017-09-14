@@ -1,5 +1,7 @@
 *.gem
 *.rbc
+*.env
+*.DS_Store
 /.config
 .vscode
 /coverage/
@@ -10,6 +12,7 @@
 /test/tmp/
 /test/version_tmp/
 /tmp/
+notes*
 
 # Used by dotenv library to load environment variables.
 # .env
@@ -49,3 +52,9 @@ build-iPhoneSimulator/
 
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
+tmp_rumbda
+index.zip
+.env
+deploy.env
+event.json
+.lambda
