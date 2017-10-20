@@ -7,7 +7,7 @@ class SierraRequest
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream. 
   # Technically speaking, they are codes that prevent holds. But we're treating any requests that come through with them as successful. 
-  SUPPRESSION_CODES = ['GO','NC','NY','NI','NK','NT','NX','NV','SM','SA','NS','SP','NE','IN','NU','RR','QP','BD']
+  SUPPRESSION_CODES = ['GO','NC','NY','NI','NK','NO','NR','NT','NX','NV','SM','SA','NS','SP','NE','IN','NU','RR','QP','BD']
 
   def initialize(json_data)
     self.json_body = json_data
@@ -35,6 +35,7 @@ class SierraRequest
       if response.code == '200'
         self.bearer = JSON.parse(response.body)["access_token"]
       end
+      
     rescue Exception => e
       CustomLogger.new({"level" => "ERROR", "message" => "Failed to get authorization token for Sierra Request: #{e}", "error_codename" => "BLOTTER"})
       self.bearer = nil
