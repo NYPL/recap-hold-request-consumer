@@ -7,7 +7,7 @@ class SierraRequest
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream. 
   # Technically speaking, they are codes that prevent holds. But we're treating any requests that come through with them as successful. 
-  SUPPRESSION_CODES = ['GO','NC','NY','NI','NK','NO','NR','NT','NX','NV','OS','OP','OB','OM','SM','SA','NS','SP','NE','IN','NU','RR','QP','BD']
+  SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NO', 'NR', 'NS', 'NT', 'NU', 'NV', 'NX', 'NY', 'NZ', 'OB', 'OM', 'OP', 'OS', 'QP', 'RR', 'SA', 'SM', 'SP']
 
   def initialize(json_data)
     self.json_body = json_data
