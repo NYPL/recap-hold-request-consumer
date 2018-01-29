@@ -31,10 +31,10 @@ class RequestResult
   def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
-      message_result = RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
+      message_result = RequestResult.send_message({"jobId" => "", "success" => false, "error" => { "type" => "key-information-missing", "message" => "500: Hold request failed. Key information missing or hold request data not found" }, "holdRequestId" => json_data["trackingId"].to_i})
       { "code" => "500", "type" => type }
     elsif message_hash["code"] == nil
-      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "holdRequestId" => hold_request["data"]["id"].to_i})
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "recap-hold-request-consumer-error", "message" => "500: ReCAP hold request consumer failure. Valid response code not found." }, "holdRequestId" => hold_request["data"]["id"].to_i})
       { "code" => "500", "type" => type }
     elsif message_hash["code"] == "200" || message_hash["code"] == "204"
       CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
@@ -42,11 +42,17 @@ class RequestResult
       {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
     elsif message_hash["code"] == "404"
       CustomLogger.new({ "level" => "INFO", "message" => "Request returned 404. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
-      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-not-found", "message" => "Hold request not found or deleted. Please try again." }, "holdRequestId" => hold_request["data"]["id"].to_i})
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-not-found", "message" => "404: Hold request not found or deleted. Please try again." }, "holdRequestId" => hold_request["data"]["id"].to_i})
       {"code" => "404", "type" => type}
     else
+      begin
+        j = JSON.parse(message_hash["message"])
+        message = "#{j["httpStatus"]} : #{j["description"]}"
+      rescue Exception => e
+        message = "500: recap hold request error. #{message_hash}"
+      end
       CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}", "error_codename" => "HIGHLIGHTER"}).log_message
-      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Hold request errored out. #{message_hash}" }, "holdRequestId" => hold_request["data"]["id"].to_i})
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
       {"code" => "500", "type" => type}
     end
   end
