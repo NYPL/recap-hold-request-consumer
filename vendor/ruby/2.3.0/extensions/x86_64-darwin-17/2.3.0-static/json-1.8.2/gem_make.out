@@ -1,0 +1,13 @@
+current directory: /Users/danielappel/recap-hold-request-consumer/vendor/ruby/2.3.0/gems/json-1.8.2/ext/json
+/Users/danielappel/.rbenv/versions/2.3.1/bin/ruby -r ./siteconf20180816-29858-1t35q40.rb extconf.rb
+creating Makefile
+
+current directory: /Users/danielappel/recap-hold-request-consumer/vendor/ruby/2.3.0/gems/json-1.8.2/ext/json
+make "DESTDIR=" clean
+
+current directory: /Users/danielappel/recap-hold-request-consumer/vendor/ruby/2.3.0/gems/json-1.8.2/ext/json
+make "DESTDIR="
+make: Nothing to be done for `all'.
+
+current directory: /Users/danielappel/recap-hold-request-consumer/vendor/ruby/2.3.0/gems/json-1.8.2/ext/json
+make "DESTDIR=" install
