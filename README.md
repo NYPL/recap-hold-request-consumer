@@ -14,7 +14,7 @@ Work in this project was based in part on the work by Attila Domokos. Found here
 2. Install required dependencies.
    * Run `BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor` to install Ruby Gems. The `--path vendor` part is IMPORTANT. Don't forget it.
    * If you have not already installed `node-lambda` as a global package, run `npm install -g node-lambda`.
-   * This app uses Traveling Ruby 
+   * This app uses Traveling Ruby
 3. Setup [configuration](#configuration) files.
    * Copy `.env.sample` file to `.env`.
    * Copy `config/var_env.env.sample` to `config/var_app.env`.
@@ -84,6 +84,9 @@ You can also invoke `main.rb` (or any other .rb file in the app) directly by run
 ~~~~
 bundle exec ruby main.rb
 ~~~~
+
+The lambda will process using the default credentials from your aws configuration if you have created
+`~./aws/credentials` as recommended above
 
 ## Deployment
 
