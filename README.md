@@ -1,4 +1,4 @@
-# Recap Hold Request Consumer 
+# Recap Hold Request Consumer
 
 Work in this project was based in part on the work by Attila Domokos. Found here http://www.adomokos.com/2016/06/using-ruby-in-aws-lambda.html
 
@@ -12,19 +12,18 @@ Work in this project was based in part on the work by Attila Domokos. Found here
 
 1. Clone the repo.
 2. Install required dependencies.
-   * Run `npm install` to install Node.js packages.
-   * Run `BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor` to install Ruby Gems. The `--path vendor` part is IMPORTANT. Don't forget it. 
+   * Run `BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor` to install Ruby Gems. The `--path vendor` part is IMPORTANT. Don't forget it.
    * If you have not already installed `node-lambda` as a global package, run `npm install -g node-lambda`.
-   * This app requires Traveling Ruby, which is a packaged version of ruby capable of being 
+   * This app uses Traveling Ruby
 3. Setup [configuration](#configuration) files.
    * Copy `.env.sample` file to `.env`.
-   * Copy `config/var_env.env.sample` to `config/var_app.env`. 
+   * Copy `config/var_env.env.sample` to `config/var_app.env`.
 
 ## Configuration
 
 Various files are used to configure and deploy the Lambda. Set yours up by creating `~./aws/credentials`
 
-This lambda currently deploys to a development and a production environment. Recommend a credential file in this format: 
+This lambda currently deploys to a development and a production environment. Recommend a credential file in this format:
 
     [default]
     region=us-east-1
@@ -56,19 +55,19 @@ This lambda currently deploys to a development and a production environment. Rec
 
 ### Makefile
 
-The Makefile is responsible for packaging the app and its dependencies and pushing it all to Amazon. 
+The Makefile is responsible for packaging the app and its dependencies and pushing it all to Amazon.
 
 ### var_*environment*.env
 
-Configures environment variables specific to each environment. var_dev.env settings will be packaged on development deployment. var_prod.env will be packaged on production deployment. var_app.env is for local settings. 
+Configures environment variables specific to each environment. var_dev.env settings will be packaged on development deployment. var_prod.env will be packaged on production deployment. var_app.env is for local settings.
 
 ### test_kinesis.json
 
-Change this file to configure a test of sample kinesis data. 
+Change this file to configure a test of sample kinesis data.
 
-### context.json 
+### context.json
 
-An empty hash, but important for node-lambda. 
+An empty hash, but important for node-lambda.
 
 ### Process a Lambda Event
 
@@ -78,13 +77,16 @@ To use `node-lambda` to process the sample event(s), run (will process `test_kin
 node-lambda run
 ~~~~
 
-Make sure that `RUN_ENV` in `var_app.env` is set to `localhost`, otherwise it will wait for stream events. 
+Make sure that `RUN_ENV` in `var_app.env` is set to `localhost`, otherwise it will wait for stream events.
 
-You can also invoke `main.rb` (or any other .rb file in the app) directly by running: 
+You can also invoke `main.rb` (or any other .rb file in the app) directly by running:
 
 ~~~~
 bundle exec ruby main.rb
 ~~~~
+
+The lambda will process using the default credentials from your aws configuration if you have created
+`~./aws/credentials` as recommended above
 
 ## Deployment
 
@@ -102,16 +104,16 @@ make deploy_production
 
 ## Testing
 
-The unit tests for the app are found in the `spec` directory. To run the full set, run: 
+The unit tests for the app are found in the `spec` directory. To run the full set, run:
 
 ~~~~
 bundle exec rspec
 ~~~~
 
-You can also run any of them directly, e.g.: 
+You can also run any of them directly, e.g.:
 
 ~~~~
 bundle exec rspec ./spec/main_spec.rb
 ~~~~
 
-Tests currently require a 404, 500, and timeout mocked response (currently set-up to run via `mocky.io`). Examples are included in the sample `var_app.env` file. Make sure they're present and valid before running tests. 
+Tests currently require a 404, 500, and timeout mocked response (currently set-up to run via `mocky.io`). Examples are included in the sample `var_app.env` file. Make sure they're present and valid before running tests.

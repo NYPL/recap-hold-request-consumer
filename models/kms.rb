@@ -3,7 +3,8 @@ class Kms
   require 'aws-sdk'
   require 'base64'
   require 'json'
-  require_relative 'custom_logger.rb'
+  require_relative './custom_logger.rb'
+
   # Decrypts an encoded secret string. Returns nil if error, plaintext key if success.
   def self.decrypt(encoded_secret)
     kms = Aws::KMS::Client.new(region: 'us-east-1')
@@ -12,7 +13,6 @@ class Kms
       cleartextkey = kms.decrypt(ciphertext_blob: decoded_string)
       cleartextkey.plaintext
     rescue Exception => e
-      puts 'here'
       CustomLogger.new(:message => "Bad decryption of secret key", level: "ERROR").log_message
       nil
     end
