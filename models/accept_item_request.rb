@@ -11,7 +11,7 @@ class AcceptItemRequest
   # Pulls apart information from json_data hash (retrieved from Kinesis event),
   # then sends the information to the build request process to format in XML.
   # Once XML is built, posts temp record to NCIP.
-  def self.process_request(json_data, hold_request)
+  def self.process_request(json_data, hold_request = nil)
     hold_request    = hold_request || HoldRequest.find(json_data["trackingId"])
 
     return {"code" => "404", "message" => "missing hold request data" } if hold_request["data"] == nil
