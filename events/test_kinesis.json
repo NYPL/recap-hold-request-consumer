@@ -2,11 +2,14 @@
   "Records": [
     {"kinesis":
        {"kinesisSchemaVersion":"1.0",
-         "wequenceNumber": "49586015132386255014062869694737092718505581988594843650",
-  "qpproximateArrivalTimestamp": "2018-08-20T15:00:37.954Z",
-  "data": "oi0ACDU1NTUAHDIzMzMzMDkwNzk3OTY4ABwzMzMzMzgwOTAxMjYzMgAyMjAxOC0wOC0yMFQxMTowMDozNy0wNDowMAIACE5ZUEwCACZGaXJlLCBDaGljYWdvLCAxODcxABxEdWV5LCBLYXRobGVlbgAYfGE2MTguMjQ0fGNS",
-  "partitionKey": "5b7ad795d6f28"
-        },
+        "partitionKey":
+         "d0ed9b677dd3418892b69c2a1ddbc852c25bedf6",
+        "sequenceNumber":
+         "49572948393596369563806803946923202554422056671776866306",
+        "data":
+         "5hMACDE0MDEAHDIzMzMzMTAyMzk0MTE5ABwzMzQzMzA5MTM1NjQ2MwAyMjAxNy0wOC0wMlQxNjoyNjozNi0wNDowMAIACE5ZUEwCALIBW05vIFJlc3RyaWN0aW9uc10gQ0FTVExFUyA6IE1PTk9HUkFQSFMgLyAgICAgQVJDSElURUNUVVJFIFNFUklFUy0tQklCTElPR1JBUEhZIDsgIFtSRUNBUF0AIlZhbmNlLCBNYXJ5IEEuICAgAg==",
+        "approximateArrivalTimestamp":
+         1494280273.264},
       "eventSource":"aws:kinesis",
       "eventVersion":"1.0",
       "eventID":

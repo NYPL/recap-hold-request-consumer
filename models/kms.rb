@@ -12,7 +12,6 @@ class Kms
       cleartextkey = kms.decrypt(ciphertext_blob: decoded_string)
       cleartextkey.plaintext
     rescue Exception => e
-      puts 'here'
       CustomLogger.new(:message => "Bad decryption of secret key", level: "ERROR").log_message
       nil
     end

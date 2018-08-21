@@ -12,7 +12,6 @@ class HoldRequest
     request = Net::HTTP::Post.new(uri)
 
     request.basic_auth(ENV['RECAP_CLIENT_ID'], Kms.decrypt(ENV['ENCODED_RECAP_CLIENT_SECRET']))
-    p ['decrypted', Kms.decrypt(ENV['ENCODED_RECAP_CLIENT_SECRET'])]
 
     request.set_form_data(
       "grant_type" => "client_credentials"
@@ -33,8 +32,6 @@ class HoldRequest
 
   # Looks up a hold requests via API.
   def self.find(hold_request_id)
-    # require 'pry'; binding.pry;
-    hold_request_id = hold_request_id
     uri = URI.parse("#{ENV['HOLD_REQUESTS_URL']}/hold-requests/#{hold_request_id}")
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"
@@ -54,7 +51,6 @@ class HoldRequest
     else
       response.code
     end
-    # require 'pry'; binding.pry;
   end
 
   # Handles the parsing of the hold request.
@@ -70,7 +66,6 @@ class HoldRequest
     end
 
     if owner.scan('nypl').empty?
-      p 69
       CustomLogger.new({ "level" => "INFO", "message" => "Processing partner hold"}).log_message
       response = AcceptItemRequest.process_request(json_data)
       RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request)
