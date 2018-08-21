@@ -1,19 +1,21 @@
-# Model responsible for building a posting a temp record to NCIP. 
+# Model responsible for building a posting a temp record to NCIP.
 class AcceptItemRequest
   require 'json'
   require 'net/http'
   require 'uri'
-
+  require_relative 'custom_logger.rb'
+  require_relative 'location.rb'
+  require_relative 'kms.rb'
   attr_accessor :request_string
 
-  # Pulls apart information from json_data hash (retrieved from Kinesis event), 
+  # Pulls apart information from json_data hash (retrieved from Kinesis event),
   # then sends the information to the build request process to format in XML.
-  # Once XML is built, posts temp record to NCIP. 
-  def self.process_request(json_data)
-    hold_request    = HoldRequest.find(json_data["trackingId"])
-    
+  # Once XML is built, posts temp record to NCIP.
+  def self.process_request(json_data, hold_request)
+    hold_request    = hold_request || HoldRequest.find(json_data["trackingId"])
+
     return {"code" => "404", "message" => "missing hold request data" } if hold_request["data"] == nil
-    return {"code" => "500", "message" => "missing item description data" } if json_data["description"] == nil 
+    return {"code" => "500", "message" => "missing item description data" } if json_data["description"] == nil
 
     hold_data       = hold_request["data"]
     borrowerId      = json_data["patronBarcode"]
@@ -28,9 +30,9 @@ class AcceptItemRequest
     callNumber      = json_data["description"]["callNumber"]
     author          = json_data["description"]["author"]
     title           = json_data["description"]["title"]
-    
+
     new_request     = AcceptItemRequest.new
-    
+
     # default 23333102394119
     new_request.build_request_string(borrowerId, itemBarcode, pickupLocation, callNumber, author, title)
     result = new_request.post_record
@@ -79,7 +81,7 @@ class AcceptItemRequest
     string.gsub(pattern){|match|"\\"  + match}.encode(:xml => :text)
   end
 
-  # Posts the XML record to Sierra NCIP. Returns code and message. 
+  # Posts the XML record to Sierra NCIP. Returns code and message.
   def post_record
     if request_string != nil
       require 'net/http'
@@ -99,13 +101,13 @@ class AcceptItemRequest
         http.request(request)
       end
 
-      CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
+      CustomLogger.new({ "level" => "INFO", "message" => "#{response.body}"}).log_message
 
       problem = response.body.scan("Problem")
       if response.code != "200" || problem.join(',').length != 0
         code = "500"
       else
-        code = "200" 
+        code = "200"
       end
 
       { "code" => code, "message" => response.body }

@@ -3,6 +3,9 @@ class SierraRequest
   require 'json'
   require 'net/http'
   require 'uri'
+  require_relative 'custom_logger.rb'
+  require_relative 'location.rb'
+  require_relative 'kms.rb'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
@@ -61,9 +64,6 @@ class SierraRequest
       "pickupLocation" => self.pickup_location
     })
 
-    require('pry') ; binding.pry;
-    puts ['request \n', request.path, request.each_header.to_a, request.body, '***']
-
     req_options = {
       use_ssl: uri.scheme == "https",
       read_timeout: 500
@@ -81,7 +81,6 @@ class SierraRequest
   # Otherwise, builds the Sierra hold request and posts it.
   def self.process_request(json_data, hold_request_data={})
     hold_request = hold_request_data == {} ? HoldRequest.find(json_data["trackingId"]) : hold_request_data
-    puts ['json_data: ', json_data, 'hold_request: ', hold_request]
 
     return { "code" => "404", "message" => "Hold request not found." } if hold_request["data"] == nil
 
