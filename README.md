@@ -117,3 +117,29 @@ bundle exec rspec ./spec/main_spec.rb
 ~~~~
 
 Tests currently require a 404, 500, and timeout mocked response (currently set-up to run via `mocky.io`). Examples are included in the sample `var_app.env` file. Make sure they're present and valid before running tests.
+
+
+We also have tests for the Sierra APIs. These are contained in the scripts `sierra-tests/test_nypl.rb`, which tests the Sierra REST API, and `sierra-tests/test_partner.rb` which tests Sierra NCIP AcceptItem.
+To run these tests, make sure `sierra-tests/env.rb` contains any changes you want to make to environmental variables then run:
+
+~~~~
+bundle exec [script] [number]
+~~~~
+
+Where [number] matches the number of the test you want to run (these are in `sierra-tests/test`).
+Each test contains a description of the test and the result it returned when it was tried, as well as a note as to whether it is intended for NCIP or REST API. Keep in mind that the test results may change since Sierra will reject a hold request that already exists.
+
+To create your own tests, most of the fields are irrelevant, but the following fields matter:
+
+For the REST API:
+  In HOLD_REQUEST_DATA:
+  * patron ( a patron id)
+  * record (a record id, i.e. an item id)
+  * deliveryLocation
+For NCIP:
+  In JSON_DATA:
+  * patron barcode
+  * item barcode
+  * description (should have a title, author, and call number)
+  In HOLD_REQUEST_DATA:
+  * deliveryLocation

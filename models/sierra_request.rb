@@ -3,6 +3,9 @@ class SierraRequest
   require 'json'
   require 'net/http'
   require 'uri'
+  require_relative 'custom_logger.rb'
+  require_relative 'location.rb'
+  require_relative 'kms.rb'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream. 
