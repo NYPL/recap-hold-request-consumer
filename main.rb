@@ -28,7 +28,7 @@ event["Records"].each do |kinesis_record|
   begin
     json_data = Stream.decode(kinesis_record["kinesis"]["data"])
     hold_request = HoldRequest.find json_data["trackingId"]
-
+    
     if hold_request == "404" || hold_request == "500"
       CustomLogger.new("level" => "ERROR", "message" => "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER").log_message
       RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
