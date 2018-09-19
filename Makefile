@@ -47,7 +47,8 @@ create_development: ## Creates an AWS lambda function
 		--timeout 10 \
 		--description "Processes hold requests from recap" \
 		--role arn:aws:iam::224280085904:role/lambda_basic_execution \
-		--zip-file fileb://./deploy/rhrc.zip
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile development
 
 deploy_development:  ## Deploys the latest version to AWS development
 	@cp config/var_dev.env config/var_deploy.env
@@ -57,6 +58,29 @@ deploy_development:  ## Deploys the latest version to AWS development
 		--function-name RecapHoldRequestConsumer-development \
 		--zip-file fileb://./deploy/rhrc.zip \
 		--profile development
+		
+create_qa: 
+	@cp config/var_qa.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=qa
+	aws lambda create-function \
+		--function-name RecapHoldRequestConsumer-qa \
+		--handler index.handler \
+		--runtime nodejs6.10 \
+		--memory 1024 \
+		--timeout 10 \
+		--description "Processes hold requests from recap" \
+		--role arn:aws:iam::946183545209:role/lambda-full-access \
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile qa
+		
+deploy_qa: ## Deploys the latest version to AWS QA
+	@cp config/var_qa.env config/var_deploy.env
+	@export AWS_DEFAULT_PROFILE=qa
+	@make package
+	aws lambda update-function-code \
+		--function-name RecapHoldRequestConsumer-qa \
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile qa
 
 deploy_production: ## Deploys the latest version to AWS development
 	@cp config/var_prod.env config/var_deploy.env
@@ -78,11 +102,16 @@ create_production:
 		--timeout 10 \
 		--description "Processes hold requests from recap" \
 		--role arn:aws:iam::946183545209:role/lambda-full-access \
-		--zip-file fileb://./deploy/rhrc.zip
+		--zip-file fileb://./deploy/rhrc.zip \
+		--profile production
 
 delete_development: ## Removes the Lambda
 	@export AWS_DEFAULT_PROFILE=development
 	aws lambda delete-function --function-name RecapHoldRequestConsumer-development
+
+delete_qa: ## Removes the lambda
+	@export AWS_DEFAULT_PROFILE=qa
+	aws lambda delete-function --function-name RecapHoldRequestConsumer-qa
 
 delete_production: ## Removes the lambda
 	@export AWS_DEFAULT_PROFILE=production

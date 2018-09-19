@@ -36,6 +36,12 @@ This lambda currently deploys to a development and a production environment. Rec
     output=json
     aws_access_key_id=DEV_ACCESS_KEY_ID
     aws_secret_access_key=DEV_SECRET_ACCESS_KEY
+    
+    [qa]
+    region=us-east-1
+    output=json
+    aws_access_key_id=QA_ACCESS_KEY_ID
+    aws_secret_access_key=QA_SECRET_ACCESS_KEY
 
     [production]
     region=us-east-1
@@ -94,6 +100,12 @@ To deploy to an environment, run the corresponding command:
 
 ~~~~
 make deploy_development
+~~~~
+
+or 
+
+~~~~
+make deploy_qa
 ~~~~
 
 or
