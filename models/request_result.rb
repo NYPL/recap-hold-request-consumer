@@ -1,6 +1,7 @@
 # Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise.
 class RequestResult
   require 'aws-sdk'
+  require_relative './sierra_request.rb'
 
   # Sends a JSON message to Kinesis after encoding and formatting it.
   def self.send_message(json_message)
@@ -37,6 +38,25 @@ class RequestResult
     CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]["name"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => "500", "type" => type}
+  end
+
+  def self.already_sent_error(message_hash)
+    message_hash["message"].is_a? Hash && message_hash["message"]["name"].is_a? String && message_hash["message"]["name"].include?("Your request has already been sent")
+  end
+
+  def self.patron_already_has_hold(hold_request, message_hash)
+    patron = hold_request["data"]["patron"]
+    record = hold_request["data"]["record"]
+    sierra_request = SierraRequest.new({})
+    sierra_request.assign_bearer
+    holds = sierra_request.get_holds(patron)
+    holds["entries"] && holds["entries"].is_a? Array && holds["entries"].any? do |entry|
+      entry['record'].is_a? String && entry['record'].include?(record)
+    end
+  end
+
+  def self.is_actually_error(hold_request, message_hash)
+    !self.already_sent_error(message_hash) || !self.patron_already_has_hold(hold_request, message_hash)
   end
 
   def self.handle_500(hold_request, message, message_hash)
