@@ -1,8 +1,8 @@
-# Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise. 
+# Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise.
 class RequestResult
   require 'aws-sdk'
 
-  # Sends a JSON message to Kinesis after encoding and formatting it. 
+  # Sends a JSON message to Kinesis after encoding and formatting it.
   def self.send_message(json_message)
     message = Stream.encode(json_message)
     client = Aws::Kinesis::Client.new
@@ -14,7 +14,7 @@ class RequestResult
     })
 
     return_hash = {}
-    
+
     if resp.successful?
       return_hash["code"] = "200"
       return_hash["message"] = json_message, resp
@@ -27,7 +27,27 @@ class RequestResult
     return_hash
   end
 
-  # Crafts a message to post based on all available information. 
+  def self.handle_success(hold_request)
+    CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
+    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
+    {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
+  end
+
+  def self.handle_500_as_error(hold_request, message, message_hash)
+    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]["name"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
+    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
+    {"code" => "500", "type" => type}
+  end
+
+  def self.handle_500(hold_request, message, message_hash)
+    if self.is_actually_error(hold_request, message_hash)
+      self.handle_500_as_error(hold_request, message, message_hash)
+    else
+      self.handle_success(hold_request)
+    end
+  end
+
+  # Crafts a message to post based on all available information.
   def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
@@ -37,9 +57,7 @@ class RequestResult
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "recap-hold-request-consumer-error", "message" => "500: ReCAP hold request consumer failure. Valid response code not found." }, "holdRequestId" => hold_request["data"]["id"].to_i})
       { "code" => "500", "type" => type }
     elsif message_hash["code"] == "200" || message_hash["code"] == "204"
-      CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
-      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
-      {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
+      self.handle_success(hold_request)
     elsif message_hash["code"] == "404"
       CustomLogger.new({ "level" => "INFO", "message" => "Request returned 404. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-not-found", "message" => "404: Hold request not found or deleted. Please try again." }, "holdRequestId" => hold_request["data"]["id"].to_i})
@@ -51,9 +69,7 @@ class RequestResult
       rescue Exception => e
         message = "500: recap hold request error. #{message_hash}"
       end
-      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}", "error_codename" => "HIGHLIGHTER"}).log_message
-      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
-      {"code" => "500", "type" => type}
+      self.handle_500(hold_request, message, message_hash)
     end
   end
 end
