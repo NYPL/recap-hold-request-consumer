@@ -40,27 +40,29 @@ class RequestResult
     {"code" => "500", "type" => type}
   end
 
-  def self.already_sent_error(message_hash)
-    message_hash["message"].is_a? Hash && message_hash["message"]["name"].is_a? String && message_hash["message"]["name"].include?("Your request has already been sent")
+  def self.already_sent_error?(message_hash)
+    hash = JSON.parse(message_hash["message"])
+    (hash.is_a? Hash) && (hash["description"].is_a? String) && (hash["description"].include?("Your request has already been sent"))
   end
 
-  def self.patron_already_has_hold(hold_request, message_hash)
+  def self.patron_already_has_hold?(hold_request)
     patron = hold_request["data"]["patron"]
     record = hold_request["data"]["record"]
     sierra_request = SierraRequest.new({})
     sierra_request.assign_bearer
     holds = sierra_request.get_holds(patron)
-    holds["entries"] && holds["entries"].is_a? Array && holds["entries"].any? do |entry|
-      entry['record'].is_a? String && entry['record'].include?(record)
+    holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
+      (entry['record'].is_a? String) && entry['record'].include?(record)
     end
   end
 
-  def self.is_actually_error(hold_request, message_hash)
-    !self.already_sent_error(message_hash) || !self.patron_already_has_hold(hold_request, message_hash)
+  def self.is_actually_error?(hold_request, message_hash)
+    !self.already_sent_error?(message_hash) || !self.patron_already_has_hold?(hold_request)
   end
 
   def self.handle_500(hold_request, message, message_hash)
-    if self.is_actually_error(hold_request, message_hash)
+    p ['handling 500', hold_request, message, message_hash]
+    if self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash)
     else
       self.handle_success(hold_request)

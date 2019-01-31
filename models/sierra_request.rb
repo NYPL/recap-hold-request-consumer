@@ -132,7 +132,7 @@ class SierraRequest
       http.request(request)
     end
 
-    response
+    JSON.parse(response.body)
   end
 
 end
