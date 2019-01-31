@@ -132,6 +132,7 @@ class SierraRequest
       http.request(request)
     end
 
+    CustomLogger.new("level" => "INFO", message => "Header: #{response.header}, Body: #{response.body}").log_message
     JSON.parse(response.body)
   end
 

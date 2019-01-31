@@ -35,7 +35,7 @@ class RequestResult
   end
 
   def self.handle_500_as_error(hold_request, message, message_hash)
-    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]["name"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
+    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => "500", "type" => type}
   end
@@ -61,7 +61,6 @@ class RequestResult
   end
 
   def self.handle_500(hold_request, message, message_hash)
-    p ['handling 500', hold_request, message, message_hash]
     if self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash)
     else
