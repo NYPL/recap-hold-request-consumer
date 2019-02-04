@@ -54,7 +54,6 @@ class CustomLogger
   def reformat_fields
     self.level = self.level.upcase
     self.level_code = VALID_LEVELS[self.level]
-    self.timestamp = self.timestamp
   end
 
   # If valid, log_message will log JSON to Cloudwatch logs and return 'true', else will return 'false'.

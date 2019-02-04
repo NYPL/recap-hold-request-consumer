@@ -28,14 +28,6 @@ describe "custom_logger" do
     expect(new_log.log_message).to eq(true)
   end
 
-  it "should format timestamp according to iso8601 standard" do 
-    new_log = CustomLogger.new({"level" => "debug", "message" => "made more coffee"})
-    this_time = Time.now
-    new_log.timestamp = this_time
-    new_log.reformat_fields
-    expect(new_log.timestamp).to eq(this_time.to_time.iso8601)
-  end
-
   it "should assign the appropriate error level code" do
     new_log = CustomLogger.new({"level" => "info", "message" => "those shoes are fabulous"})
     new_log.reformat_fields
