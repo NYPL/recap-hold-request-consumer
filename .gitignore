@@ -58,3 +58,7 @@ index.zip
 deploy.env
 event.json
 .lambda
+
+decoded_event_example.rb
+sample_hold_request.rb
+vendor
