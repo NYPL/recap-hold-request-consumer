@@ -28,13 +28,13 @@ class RequestResult
     return_hash
   end
 
-  def self.handle_success(hold_request)
+  def self.handle_success(hold_request, type)
     CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
   end
 
-  def self.handle_500_as_error(hold_request, message, message_hash)
+  def self.handle_500_as_error(hold_request, message, message_hash, type)
     CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => "500", "type" => type}
@@ -51,8 +51,8 @@ class RequestResult
     sierra_request = SierraRequest.new({})
     sierra_request.assign_bearer
     holds = sierra_request.get_holds(patron)
-    holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
-      (entry['record'].is_a? String) && entry['record'].include?(record)
+    (holds.is_a? Hash) && holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
+      (entry.is_a? Hash) && (entry['record'].is_a? String) && entry['record'].include?(record)
     end
   end
 
@@ -60,11 +60,11 @@ class RequestResult
     !self.already_sent_error?(message_hash) || !self.patron_already_has_hold?(hold_request)
   end
 
-  def self.handle_500(hold_request, message, message_hash)
+  def self.handle_500(hold_request, message, message_hash, type)
     if self.is_actually_error?(hold_request, message_hash)
-      self.handle_500_as_error(hold_request, message, message_hash)
+      self.handle_500_as_error(hold_request, message, message_hash, type)
     else
-      self.handle_success(hold_request)
+      self.handle_success(hold_request, type)
     end
   end
 
@@ -78,7 +78,7 @@ class RequestResult
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "recap-hold-request-consumer-error", "message" => "500: ReCAP hold request consumer failure. Valid response code not found." }, "holdRequestId" => hold_request["data"]["id"].to_i})
       { "code" => "500", "type" => type }
     elsif message_hash["code"] == "200" || message_hash["code"] == "204"
-      self.handle_success(hold_request)
+      self.handle_success(hold_request, type)
     elsif message_hash["code"] == "404"
       CustomLogger.new({ "level" => "INFO", "message" => "Request returned 404. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-not-found", "message" => "404: Hold request not found or deleted. Please try again." }, "holdRequestId" => hold_request["data"]["id"].to_i})
@@ -90,7 +90,7 @@ class RequestResult
       rescue Exception => e
         message = "500: recap hold request error. #{message_hash}"
       end
-      self.handle_500(hold_request, message, message_hash)
+      self.handle_500(hold_request, message, message_hash, type)
     end
   end
 end
