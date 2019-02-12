@@ -41,8 +41,9 @@ class RequestResult
   end
 
   def self.already_sent_error?(message_hash)
+    error_list = ["Your request has already been sent", "already on hold for or checked out to you"]
     hash = JSON.parse(message_hash["message"])
-    (hash.is_a? Hash) && (hash["description"].is_a? String) && (hash["description"].include?("Your request has already been sent"))
+    (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
 
   def self.patron_already_has_hold?(hold_request)
