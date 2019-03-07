@@ -49,7 +49,6 @@ class RequestResult
   def self.patron_already_has_hold?(hold_request)
     patron = hold_request["data"]["patron"]
     record = hold_request["data"]["record"]
-    # sierra_request = SierraRequest.new({})
     sierra_request = SierraRequest.build_new_sierra_request({})
     sierra_request.assign_bearer
     holds = sierra_request.get_holds(patron)
