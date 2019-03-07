@@ -99,6 +99,7 @@ class SierraRequest
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
   # Also retrieves pickup location code based on presence of pickupLocation or deliveryLocation.
   def self.build_new_sierra_request(hold_request_data)
+    p [102, hold_request_data]
     CustomLogger.new("level" => "info", "message" => "Processing Sierra NYPL Request: #{hold_request_data}")
     sierra_request = SierraRequest.new(hold_request_data)
     sierra_request.patron_id = hold_request_data["patron"]
@@ -117,10 +118,14 @@ class SierraRequest
   end
 
   def get_holds(patron)
+    p ['get holds', patron]
+    p self.base_request_url
     uri = URI.parse("#{self.base_request_url}/patrons/#{patron}/holds")
-
+    p ['uri', uri]
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"
+    p 126
+    p self.bearer
     request["Authorization"] = "Bearer #{self.bearer}"
 
     req_options = {
@@ -128,11 +133,14 @@ class SierraRequest
       read_timeout: 500
     }
 
+    p 133
     response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
       http.request(request)
     end
 
-    CustomLogger.new("level" => "INFO", message => "Header: #{response.header}, Body: #{response.body}").log_message
+    p [141, response]
+
+    CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message
     JSON.parse(response.body)
   end
 
