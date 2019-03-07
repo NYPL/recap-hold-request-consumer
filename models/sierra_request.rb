@@ -117,7 +117,6 @@ class SierraRequest
   end
 
   def get_holds(patron)
-    p self.base_request_url
     uri = URI.parse("#{self.base_request_url}/patrons/#{patron}/holds")
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"

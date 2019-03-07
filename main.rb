@@ -27,7 +27,6 @@ end
 event["Records"].each do |kinesis_record|
   begin
     json_data = Stream.decode(kinesis_record["kinesis"]["data"])
-    p [30, json_data]
     hold_request = HoldRequest.find json_data["trackingId"]
 
     if hold_request == "404" || hold_request == "500"

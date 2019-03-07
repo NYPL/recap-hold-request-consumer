@@ -52,21 +52,17 @@ class RequestResult
     # sierra_request = SierraRequest.new({})
     sierra_request = SierraRequest.build_new_sierra_request({})
     sierra_request.assign_bearer
-    p 58
     holds = sierra_request.get_holds(patron)
-    p 60
     (holds.is_a? Hash) && holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
       (entry.is_a? Hash) && (entry['record'].is_a? String) && entry['record'].include?(record)
     end
   end
 
   def self.is_actually_error?(hold_request, message_hash)
-    p 63
     !self.already_sent_error?(message_hash) || !self.patron_already_has_hold?(hold_request)
   end
 
   def self.handle_500(hold_request, message, message_hash, type)
-    p 68
     if self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else
