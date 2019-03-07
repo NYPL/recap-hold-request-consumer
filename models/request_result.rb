@@ -29,28 +29,24 @@ class RequestResult
   end
 
   def self.handle_success(hold_request, type)
-    p [32, hold_request, type]
     CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
   end
 
   def self.handle_500_as_error(hold_request, message, message_hash, type)
-    p [38, hold_request, message, message_hash, type]
     CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => "500", "type" => type}
   end
 
   def self.already_sent_error?(message_hash)
-    p [44, message_hash]
     error_list = ["Your request has already been sent", "already on hold for or checked out to you"]
     hash = JSON.parse(message_hash["message"])
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
 
   def self.patron_already_has_hold?(hold_request)
-    p [51, hold_request]
     patron = hold_request["data"]["patron"]
     record = hold_request["data"]["record"]
     # sierra_request = SierraRequest.new({})

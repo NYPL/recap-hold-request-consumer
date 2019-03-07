@@ -12,7 +12,6 @@ class AcceptItemRequest
   # then sends the information to the build request process to format in XML.
   # Once XML is built, posts temp record to NCIP.
   def self.process_request(json_data, hold_request = nil)
-    p [15, hold_request]
     hold_request    = hold_request || HoldRequest.find(json_data["trackingId"])
 
     return {"code" => "404", "message" => "missing hold request data" } if hold_request["data"] == nil
