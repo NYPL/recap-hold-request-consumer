@@ -127,8 +127,12 @@ class SierraRequest
       read_timeout: 500
     }
 
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-      http.request(request)
+    begin
+      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+        http.request(request)
+      end
+    rescue Exception => e
+      CustomLogger.new("level" => "ERROR", "message" => "Error getting holds for patron: #{e.message}")
     end
 
     CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message
