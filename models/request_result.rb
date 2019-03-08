@@ -46,12 +46,21 @@ class RequestResult
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
 
+  def self.get_patron_holds(patron)
+    begin
+      sierra_request = SierraRequest.new({})
+      sierra_request.base_request_url = ENV['SIERRA_URL']
+      sierra_request.assign_bearer
+      sierra_request.get_holds(patron)
+    rescue Error => e
+      CustomLogger.new("level" => "ERROR", "message" => "Unable to get holds for patron: #{e.message}")
+    end
+  end
+
   def self.patron_already_has_hold?(hold_request)
     patron = hold_request["data"]["patron"]
     record = hold_request["data"]["record"]
-    sierra_request = SierraRequest.new({})
-    sierra_request.assign_bearer
-    holds = sierra_request.get_holds(patron)
+    holds = self.get_patron_holds(patron)
     (holds.is_a? Hash) && holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
       (entry.is_a? Hash) && (entry['record'].is_a? String) && entry['record'].include?(record)
     end
@@ -62,6 +71,7 @@ class RequestResult
   end
 
   def self.handle_500(hold_request, message, message_hash, type)
+    CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
     if self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else

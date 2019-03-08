@@ -1,7 +1,7 @@
-# Model for finding pickup locations if given delivery codes. 
+# Model for finding pickup locations if given delivery codes.
 class Location
 
-  # Gets the pickup code for a given delivery code. 
+  # Gets the pickup code for a given delivery code.
   def self.get_pickup_for(recap_delivery_code)
     require 'net/http'
     require 'uri'

@@ -118,7 +118,6 @@ class SierraRequest
 
   def get_holds(patron)
     uri = URI.parse("#{self.base_request_url}/patrons/#{patron}/holds")
-
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"
     request["Authorization"] = "Bearer #{self.bearer}"
@@ -128,11 +127,15 @@ class SierraRequest
       read_timeout: 500
     }
 
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-      http.request(request)
+    begin
+      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+        http.request(request)
+      end
+    rescue Exception => e
+      CustomLogger.new("level" => "ERROR", "message" => "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}")
     end
 
-    CustomLogger.new("level" => "INFO", message => "Header: #{response.header}, Body: #{response.body}").log_message
+    CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message
     JSON.parse(response.body)
   end
 
