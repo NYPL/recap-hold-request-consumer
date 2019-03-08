@@ -48,7 +48,8 @@ class RequestResult
 
   def self.get_patron_holds(patron)
     begin
-      sierra_request = SierraRequest.build_new_sierra_request({})
+      sierra_request = SierraRequest.new({})
+      sierra_request.base_request_url = ENV['SIERRA_URL']
       sierra_request.assign_bearer
       sierra_request.get_holds(patron)
     rescue Error => e
