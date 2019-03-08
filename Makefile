@@ -71,7 +71,7 @@ create_qa:
 		--description "Processes hold requests from recap" \
 		--role arn:aws:iam::946183545209:role/lambda-full-access \
 		--zip-file fileb://./deploy/rhrc.zip \
-		--profile nypl-digital-dev
+		--profile qa
 
 deploy_qa: ## Deploys the latest version to AWS QA
 	@cp config/var_qa.env config/var_deploy.env
@@ -80,7 +80,7 @@ deploy_qa: ## Deploys the latest version to AWS QA
 	aws lambda update-function-code \
 		--function-name RecapHoldRequestConsumer-qa \
 		--zip-file fileb://./deploy/rhrc.zip \
-		--profile nypl-digital-dev
+		--profile qa
 
 deploy_production: ## Deploys the latest version to AWS development
 	@cp config/var_prod.env config/var_deploy.env
