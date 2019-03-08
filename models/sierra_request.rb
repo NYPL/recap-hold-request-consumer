@@ -132,7 +132,7 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
-      CustomLogger.new("level" => "ERROR", "message" => "Error getting holds for patron: #{e.message}")
+      CustomLogger.new("level" => "ERROR", "message" => "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}")
     end
 
     CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message
