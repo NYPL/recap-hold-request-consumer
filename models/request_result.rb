@@ -62,6 +62,7 @@ class RequestResult
   end
 
   def self.handle_500(hold_request, message, message_hash, type)
+    CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
     if self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else

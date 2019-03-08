@@ -58,8 +58,8 @@ deploy_development:  ## Deploys the latest version to AWS development
 		--function-name RecapHoldRequestConsumer-development \
 		--zip-file fileb://./deploy/rhrc.zip \
 		--profile development
-		
-create_qa: 
+
+create_qa:
 	@cp config/var_qa.env config/var_deploy.env
 	@export AWS_DEFAULT_PROFILE=qa
 	aws lambda create-function \
@@ -72,7 +72,7 @@ create_qa:
 		--role arn:aws:iam::946183545209:role/lambda-full-access \
 		--zip-file fileb://./deploy/rhrc.zip \
 		--profile qa
-		
+
 deploy_qa: ## Deploys the latest version to AWS QA
 	@cp config/var_qa.env config/var_deploy.env
 	@export AWS_DEFAULT_PROFILE=qa
@@ -80,7 +80,7 @@ deploy_qa: ## Deploys the latest version to AWS QA
 	aws lambda update-function-code \
 		--function-name RecapHoldRequestConsumer-qa \
 		--zip-file fileb://./deploy/rhrc.zip \
-		--profile qa
+		--profile nypl-digital-dev
 
 deploy_production: ## Deploys the latest version to AWS development
 	@cp config/var_prod.env config/var_deploy.env
@@ -91,7 +91,7 @@ deploy_production: ## Deploys the latest version to AWS development
 		--zip-file fileb://./deploy/rhrc.zip \
 		--profile production
 
-create_production: 
+create_production:
 	@cp config/var_prod.env config/var_deploy.env
 	@export AWS_DEFAULT_PROFILE=production
 	aws lambda create-function \
