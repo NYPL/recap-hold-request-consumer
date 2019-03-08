@@ -18,4 +18,3 @@ gem 'avro-patches'
 gem 'oauth'
 gem 'rubocop', require: false
 gem 'gibberish'
-gem 'rake', '12.0.0'

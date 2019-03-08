@@ -71,7 +71,7 @@ create_qa:
 		--description "Processes hold requests from recap" \
 		--role arn:aws:iam::946183545209:role/lambda-full-access \
 		--zip-file fileb://./deploy/rhrc.zip \
-		--profile qa
+		--profile nypl-digital-dev
 
 deploy_qa: ## Deploys the latest version to AWS QA
 	@cp config/var_qa.env config/var_deploy.env
