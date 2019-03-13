@@ -39,5 +39,6 @@ event["Records"].each do |kinesis_record|
     end
   rescue Exception => e
     CustomLogger.new("level" => "ERROR", "message" => "#{e}", "error_codename" => "ROGET").log_message
+    raise 'Retryable Error' if e.message == 'Retryable Error'
   end
 end
