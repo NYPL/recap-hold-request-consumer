@@ -64,12 +64,12 @@ class SierraRequest
       "pickupLocation" => self.pickup_location
     })
 
-    req_options = {
-      use_ssl: uri.scheme == "https",
-      read_timeout: 500
-    }
+    # req_options = {
+    #   use_ssl: uri.scheme == "https",
+    #   read_timeout: 500
+    # }
 
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
       http.request(request)
     end
 

@@ -31,7 +31,7 @@ exports.handler = function(event, context) {
     const message = 'Lambda was unable to execute Ruby (' + spawnedProcess.error + ')';
     return false;
   }
-
+  
   spawnedProcess.stdout.toString().split("\n").map(function (message) {
     if (message.trim().length) console.log(message);
   });
