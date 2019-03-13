@@ -40,8 +40,15 @@ class RequestResult
     {"code" => "500", "type" => type}
   end
 
-  def self.already_sent_error?(message_hash)
-    error_list = ["Your request has already been sent", "already on hold for or checked out to you"]
+  def self.already_sent_errors
+    ["already on hold for or checked out to you"]
+  end
+
+  def self.retryable_errors
+    ["Your request has already been sent"]
+  end
+
+  def self.is_error_type?(message_hash, error_list)
     hash = JSON.parse(message_hash["message"])
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
@@ -67,12 +74,15 @@ class RequestResult
   end
 
   def self.is_actually_error?(hold_request, message_hash)
-    !self.already_sent_error?(message_hash) || !self.patron_already_has_hold?(hold_request)
+    !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
   end
 
   def self.handle_500(hold_request, message, message_hash, type)
     CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
-    if self.is_actually_error?(hold_request, message_hash)
+    if self.is_error_type?(message_hash, self.retryable_errors)
+      CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
+      raise "Retryable Error"
+    elsif self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else
       self.handle_success(hold_request, type)
