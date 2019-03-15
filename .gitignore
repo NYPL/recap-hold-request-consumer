@@ -67,3 +67,4 @@ resources/.bundle
 resources/bundler-config
 deploy
 rhrc-1.0.0-linux-x86_64
+ruby/
