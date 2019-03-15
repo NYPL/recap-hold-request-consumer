@@ -1,0 +1,11 @@
+inherit_gem:
+  salsify_rubocop: conf/rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 2.2
+
+Style/MultilineBlockChain:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false

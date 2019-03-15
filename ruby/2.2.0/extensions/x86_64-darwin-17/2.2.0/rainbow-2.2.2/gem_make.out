@@ -1,0 +1,5 @@
+current directory: /Users/danielappel/recap-hold-request-consumer/ruby/2.2.0/gems/rainbow-2.2.2/ext
+/Users/danielappel/.rvm/rubies/ruby-2.2.2/bin/ruby mkrf_conf.rb
+
+current directory: /Users/danielappel/recap-hold-request-consumer/ruby/2.2.0/gems/rainbow-2.2.2/ext
+/Users/danielappel/.rvm/rubies/ruby-2.2.2/bin/ruby -rrubygems /Users/danielappel/recap-hold-request-consumer/ruby/2.2.0/gems/rake-12.0.0/exe/rake RUBYARCHDIR=/Users/danielappel/recap-hold-request-consumer/ruby/2.2.0/extensions/x86_64-darwin-17/2.2.0/rainbow-2.2.2 RUBYLIBDIR=/Users/danielappel/recap-hold-request-consumer/ruby/2.2.0/extensions/x86_64-darwin-17/2.2.0/rainbow-2.2.2

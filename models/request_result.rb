@@ -77,11 +77,15 @@ class RequestResult
     !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
   end
 
-  def self.handle_500(hold_request, message, message_hash, type)
+  def there_is_time(timestamp)
+    Time.now.to_f - timestamp.to_f < 30
+  end
+
+  def self.handle_500(hold_request, message, message_hash, type, timestamp)
     CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
-    if self.is_error_type?(message_hash, self.retryable_errors)
+    if self.is_error_type?(message_hash, self.retryable_errors) && there_is_time(timestamp)
       CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
-      raise "Retryable Error"
+      sleep(10)
     elsif self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else
@@ -90,7 +94,7 @@ class RequestResult
   end
 
   # Crafts a message to post based on all available information.
-  def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil)
+  def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil, timestamp=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
       message_result = RequestResult.send_message({"jobId" => "", "success" => false, "error" => { "type" => "key-information-missing", "message" => "500: Hold request failed. Key information missing or hold request data not found" }, "holdRequestId" => json_data["trackingId"].to_i})
@@ -111,7 +115,7 @@ class RequestResult
       rescue Exception => e
         message = "500: recap hold request error. #{message_hash}"
       end
-      self.handle_500(hold_request, message, message_hash, type)
+      self.handle_500(hold_request, message, message_hash, type, timestamp)
     end
   end
 end

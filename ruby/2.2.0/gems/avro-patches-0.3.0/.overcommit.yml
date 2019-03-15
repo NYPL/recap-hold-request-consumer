@@ -1,0 +1,8 @@
+PreCommit:
+  HardTabs:
+    enabled: true
+    required: false
+
+CommitMsg:
+  TrailingPeriod:
+    enabled: false
