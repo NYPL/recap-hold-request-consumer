@@ -77,15 +77,25 @@ class RequestResult
     !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
   end
 
-  def there_is_time(timestamp)
+  def self.there_is_time(timestamp)
     Time.now.to_f - timestamp.to_f < 30
+  end
+
+  def self.handle_retryable_error(hold_request, type, timestamp)
+    if self.there_is_time(timestamp)
+      CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
+      sleep(10)
+    else
+      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})
+      {"code" => "500", "type" => type}
+    end
   end
 
   def self.handle_500(hold_request, message, message_hash, type, timestamp)
     CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
-    if self.is_error_type?(message_hash, self.retryable_errors) && there_is_time(timestamp)
-      CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
-      sleep(10)
+    if self.is_error_type?(message_hash, self.retryable_errors)
+      handle_retryable_error(hold_request, type, timestamp)
     elsif self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else
