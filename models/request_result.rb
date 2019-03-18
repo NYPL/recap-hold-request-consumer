@@ -84,7 +84,7 @@ class RequestResult
   def self.handle_retryable_error(hold_request, type, timestamp)
     if self.there_is_time(timestamp)
       CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
-      
+      sleep(10)
     else
       CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. ", "error_codename" => "HIGHLIGHTER"}).log_message
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})

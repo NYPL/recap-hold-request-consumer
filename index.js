@@ -8,7 +8,7 @@ function getRuby() {
     return 'ruby';
 }
 
-exports.handler = function(event, context, callback) {
+exports.handler = function(event, context) {
   var addedEnvironment = {
     GEM_PATH: __dirname
   };
@@ -31,13 +31,7 @@ exports.handler = function(event, context, callback) {
     const message = 'Lambda was unable to execute Ruby (' + spawnedProcess.error + ')';
     return false;
   }
-
-  console.log('spawnedProcess: ', spawnedProcess.stdout.toString())
-
-  if (spawnedProcess.stdout.toString().includes('retryable')) {
-    callback(new Error("retryable exception"));
-  }
-
+  
   spawnedProcess.stdout.toString().split("\n").map(function (message) {
     if (message.trim().length) console.log(message);
   });
