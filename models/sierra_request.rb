@@ -1,4 +1,3 @@
-require_relative './timeout.rb'
 
 # Model represents NYPL hold requests and includes method to post hold to Sierra.
 class SierraRequest
@@ -8,6 +7,7 @@ class SierraRequest
   require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
+  require_relative 'timeout.rb'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
