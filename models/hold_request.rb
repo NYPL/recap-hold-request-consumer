@@ -56,7 +56,7 @@ class HoldRequest
   # Handles the parsing of the hold request.
   # Routes hold requests to post to NCIP if request is a partner hold.
   # Routes hold requests to post to Sierra holds if request is an NYPL hold.
-  def route_request_with(json_data,hold_request, timestamp)
+  def route_request_with(json_data, hold_request, timestamp)
     owner = ""
 
     if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil

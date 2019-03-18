@@ -1,3 +1,5 @@
+require_relative './timeout.rb'
+
 # Model represents NYPL hold requests and includes method to post hold to Sierra.
 class SierraRequest
   require 'json'
@@ -64,13 +66,17 @@ class SierraRequest
       "pickupLocation" => self.pickup_location
     })
 
-    # req_options = {
-    #   use_ssl: uri.scheme == "https",
-    #   read_timeout: 500
-    # }
+    req_options = {
+      # use_ssl: uri.scheme == "https",
+      read_timeout: 5
+    }
 
-    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
-      http.request(request)
+    begin
+      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+        http.request(request)
+      end
+    rescue Exception => e
+      response = Timeout.new
     end
 
     CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
