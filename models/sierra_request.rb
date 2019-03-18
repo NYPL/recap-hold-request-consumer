@@ -7,7 +7,7 @@ class SierraRequest
   require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
-  require_relative 'timeout.rb'
+  require_relative 'timeout_response.rb'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
@@ -76,7 +76,7 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
-      response = Timeout.new
+      response = TimeoutResponse.new
     end
 
     CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
