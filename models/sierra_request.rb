@@ -67,7 +67,7 @@ class SierraRequest
     })
 
     req_options = {
-      # use_ssl: uri.scheme == "https",
+      use_ssl: uri.scheme == "https",
       read_timeout: 5
     }
 
