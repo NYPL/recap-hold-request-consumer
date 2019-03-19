@@ -68,7 +68,7 @@ class SierraRequest
 
     req_options = {
       use_ssl: uri.scheme == "https",
-      read_timeout: 5
+      read_timeout: 10
     }
 
     begin
@@ -76,6 +76,7 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
+      CustomLogger.new({"level" => "ERROR", "message" => "Sierra post_request error: #{e.message}"}).log_message
       response = TimeoutResponse.new
     end
 
