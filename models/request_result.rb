@@ -29,18 +29,6 @@ class RequestResult
     return_hash
   end
 
-  def self.handle_success(hold_request, type)
-    CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
-    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
-    {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
-  end
-
-  def self.handle_500_as_error(hold_request, message, message_hash, type)
-    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
-    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
-    {"code" => "500", "type" => type}
-  end
-
   def self.already_sent_errors
     ["already on hold for or checked out to you"]
   end
@@ -78,13 +66,15 @@ class RequestResult
     end
   end
 
-  def self.is_actually_error?(hold_request, message_hash)
-    !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
-  end
+
+  # Used to tell if we have enough time to retry a request before SCSB times out
 
   def self.there_is_time(timestamp)
     Time.now.to_f - timestamp.to_f < 30
   end
+
+  # If we get a response of "Your request has already been sent" and there is time to retry the
+  # request before SCSB times out, we will retry after waiting for a fixed time interval
 
   def self.handle_retryable_error(json_data, hold_request, type, timestamp)
     if self.there_is_time(timestamp)
@@ -98,18 +88,7 @@ class RequestResult
     end
   end
 
-  def self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
-    CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
-    if self.is_error_type?(message_hash, self.retryable_errors)
-      handle_retryable_error(json_data, hold_request, type, timestamp)
-    elsif self.is_error_type?(message_hash, self.timeout_errors)
-      self.handle_timeout(type, json_data, hold_request, timestamp)
-    elsif self.is_actually_error?(hold_request, message_hash)
-      self.handle_500_as_error(hold_request, message, message_hash, type)
-    else
-      self.handle_success(hold_request, type)
-    end
-  end
+  # If the request times out but SCSB isn't about to timeout, we will automatically retry
 
   def self.handle_timeout(type, json_data, hold_request, timestamp)
     if there_is_time(timestamp)
@@ -121,8 +100,52 @@ class RequestResult
       {"code" => "500", "type" => type}
     end
   end
+  
+  # If the error type is "already on hold to you", we check that the hold has actually been placed.
+  # If it has, this isn't really an error, and we will proceed as in case of success
+
+  def self.is_actually_error?(hold_request, message_hash)
+    !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
+  end
+
+  # This is in case there is a real error, or a potential error which there is no time to check.
+
+  def self.handle_500_as_error(hold_request, message, message_hash, type)
+    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
+    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
+    {"code" => "500", "type" => type}
+  end
+
+  def self.handle_success(hold_request, type)
+    CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
+    message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
+    {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
+  end
+
+  # Determines what kind of error occurred and routes to the appropriate method.
+  # Depending on the type of 500 response, we may or may not consider it to actually be an error
+
+  def self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
+    CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
+    if self.is_error_type?(message_hash, self.retryable_errors) # Errors, such as "Your request has already been sent", which should be retried
+      handle_retryable_error(json_data, hold_request, type, timestamp)
+    elsif self.is_error_type?(message_hash, self.timeout_errors) # A timeout error
+      self.handle_timeout(type, json_data, hold_request, timestamp)
+    elsif self.is_actually_error?(hold_request, message_hash) # Some Sierra errors, such as "Already on hold to you", aren't actually errors
+      self.handle_500_as_error(hold_request, message, message_hash, type)
+    else
+      self.handle_success(hold_request, type) # If not actually an error, we swallow the error and treat it as a success
+    end
+  end
+
 
   # Crafts a message to post based on all available information.
+  # hold_request stores the information retrieved from the HoldRequestService
+  # json_data stores the data from the kinesis event, in particular the patron and item barcodes
+  # timestamp is the approximate arrival time of the kinesis event
+  # type is either AcceptItemRequest or SierraRequest
+  # message_hash is a hash with a code and a description (corresponding to the http response code and body)
+
   def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil, timestamp=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
