@@ -2,6 +2,7 @@
 class RequestResult
   require 'aws-sdk'
   require_relative './sierra_request.rb'
+  require_relative './hold_request.rb'
 
   # Sends a JSON message to Kinesis after encoding and formatting it.
   def self.send_message(json_message)
@@ -40,8 +41,19 @@ class RequestResult
     {"code" => "500", "type" => type}
   end
 
-  def self.already_sent_error?(message_hash)
-    error_list = ["Your request has already been sent", "already on hold for or checked out to you"]
+  def self.already_sent_errors
+    ["already on hold for or checked out to you"]
+  end
+
+  def self.retryable_errors
+    ["Your request has already been sent"]
+  end
+
+  def self.timeout_errors
+    ["Timeout"]
+  end
+
+  def self.is_error_type?(message_hash, error_list)
     hash = JSON.parse(message_hash["message"])
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
@@ -67,20 +79,51 @@ class RequestResult
   end
 
   def self.is_actually_error?(hold_request, message_hash)
-    !self.already_sent_error?(message_hash) || !self.patron_already_has_hold?(hold_request)
+    !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
   end
 
-  def self.handle_500(hold_request, message, message_hash, type)
+  def self.there_is_time(timestamp)
+    Time.now.to_f - timestamp.to_f < 30
+  end
+
+  def self.handle_retryable_error(json_data, hold_request, type, timestamp)
+    if self.there_is_time(timestamp)
+      CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
+      sleep(10)
+      HoldRequest.new.route_request_with(json_data,hold_request, timestamp)
+    else
+      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})
+      {"code" => "500", "type" => type}
+    end
+  end
+
+  def self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
     CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
-    if self.is_actually_error?(hold_request, message_hash)
+    if self.is_error_type?(message_hash, self.retryable_errors)
+      handle_retryable_error(json_data, hold_request, type, timestamp)
+    elsif self.is_error_type?(message_hash, self.timeout_errors)
+      self.handle_timeout(type, json_data, hold_request, timestamp)
+    elsif self.is_actually_error?(hold_request, message_hash)
       self.handle_500_as_error(hold_request, message, message_hash, type)
     else
       self.handle_success(hold_request, type)
     end
   end
 
+  def self.handle_timeout(type, json_data, hold_request, timestamp)
+    if there_is_time(timestamp)
+      CustomLogger.new({ "level" => "ERROR", "message" => "HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Hold request timeout out. Will retry. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      HoldRequest.new.route_request_with(json_data,hold_request, timestamp)
+    else
+      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. Will not retry. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})
+      {"code" => "500", "type" => type}
+    end
+  end
+
   # Crafts a message to post based on all available information.
-  def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil)
+  def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil, timestamp=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
       CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
       message_result = RequestResult.send_message({"jobId" => "", "success" => false, "error" => { "type" => "key-information-missing", "message" => "500: Hold request failed. Key information missing or hold request data not found" }, "holdRequestId" => json_data["trackingId"].to_i})
@@ -101,7 +144,7 @@ class RequestResult
       rescue Exception => e
         message = "500: recap hold request error. #{message_hash}"
       end
-      self.handle_500(hold_request, message, message_hash, type)
+      self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
     end
   end
 end

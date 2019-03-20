@@ -6,6 +6,7 @@ class AcceptItemRequest
   require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
+  require_relative 'timeout_response.rb'
   attr_accessor :request_string
 
   # Pulls apart information from json_data hash (retrieved from Kinesis event),
@@ -94,14 +95,21 @@ class AcceptItemRequest
 
       req_options = {
         use_ssl: uri.scheme == "https",
-        read_timeout: 500
+        read_timeout: 10
       }
 
-      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-        http.request(request)
+      begin
+        response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+          http.request(request)
+        end
+      rescue Exception => e
+        CustomLogger.new({"level" => "ERROR", "message" => "AcceptItem post_record error: #{e.message}"}).log_message
+        response = TimeoutResponse.new
       end
 
-      CustomLogger.new({ "level" => "INFO", "message" => "#{response.body}"}).log_message
+
+
+      CustomLogger.new({ "level" => "INFO", "message" => "AcceptItem post record response: #{response.body}"}).log_message
 
       problem = response.body.scan("Problem")
       if response.code != "200" || problem.join(',').length != 0

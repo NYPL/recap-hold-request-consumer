@@ -1,3 +1,4 @@
+
 # Model represents NYPL hold requests and includes method to post hold to Sierra.
 class SierraRequest
   require 'json'
@@ -6,6 +7,7 @@ class SierraRequest
   require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
+  require_relative 'timeout_response.rb'
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
@@ -66,11 +68,16 @@ class SierraRequest
 
     req_options = {
       use_ssl: uri.scheme == "https",
-      read_timeout: 500
+      read_timeout: 10
     }
 
-    response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-      http.request(request)
+    begin
+      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+        http.request(request)
+      end
+    rescue Exception => e
+      CustomLogger.new({"level" => "ERROR", "message" => "Sierra post_request error: #{e.message}"}).log_message
+      response = TimeoutResponse.new
     end
 
     CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
