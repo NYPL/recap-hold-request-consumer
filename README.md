@@ -96,6 +96,10 @@ The lambda will process using the default credentials from your aws configuratio
 
 ## Deployment
 
+Deployments (AWS account `nypl-digital-dev`):
+ * Production: Lambda > Functions > RecapHoldRequestConsumer-production
+ * QA: Lambda > Functions > RecapHoldRequestConsumer-qa
+ 
 To deploy to an environment, run the corresponding command:
 
 ~~~~
