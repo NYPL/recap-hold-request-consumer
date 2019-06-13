@@ -36,7 +36,7 @@ event["Records"].each do |kinesis_record|
     else
       CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data.").log_message
       CustomLogger.new("level" => "INFO", "message" => "Found hold request data.").log_message
-      HoldRequest.new.route_request_with(json_data,hold_request, timestamp)
+      HoldRequest.new.route_request_with(json_data, hold_request, timestamp)
     end
   rescue Exception => e
     CustomLogger.new("level" => "ERROR", "message" => "#{e}", "error_codename" => "ROGET").log_message

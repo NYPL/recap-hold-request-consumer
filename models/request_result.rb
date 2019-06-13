@@ -1,3 +1,5 @@
+require 'securerandom'
+
 # Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise.
 class RequestResult
   require 'aws-sdk'
@@ -41,6 +43,9 @@ class RequestResult
     {"code" => "500", "type" => type}
   end
 
+  # Get list of phrases we anticipate in error messages where request has
+  # already been sent. Note "Your request has already been sent" is a
+  # possible error message, but not one we handle here.
   def self.already_sent_errors
     ["already on hold for or checked out to you"]
   end
@@ -58,26 +63,40 @@ class RequestResult
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
   end
 
+  # Get holds for patron id via Sierra api
   def self.get_patron_holds(patron)
     begin
       sierra_request = SierraRequest.new({})
       sierra_request.base_request_url = ENV['SIERRA_URL']
       sierra_request.assign_bearer
       sierra_request.get_holds(patron)
-    rescue Error => e
+    rescue StandardError => e
       CustomLogger.new("level" => "ERROR", "message" => "Unable to get holds for patron: #{e.message}")
     end
   end
 
+  # Returns true if hold_request hash is for a record for which the patron has
+  # already placed a hold
   def self.patron_already_has_hold?(hold_request)
+    # Get patron id:
     patron = hold_request["data"]["patron"]
     record = hold_request["data"]["record"]
+    # Fetch holds from Sierra api for patron id:
     holds = self.get_patron_holds(patron)
     (holds.is_a? Hash) && holds["entries"] && (holds["entries"].is_a? Array) && holds["entries"].any? do |entry|
       (entry.is_a? Hash) && (entry['record'].is_a? String) && entry['record'].include?(record)
     end
   end
 
+  # Return true if hold_request hash and message_hash (response from Sierra
+  # NCIP/Rest api):
+  #  1) is not an "already sent" error (which we don't consider an error?) OR
+  #  2) hold is not a duplicate for patron
+  # This is called in the context of handling an error after checking for other
+  # known error conditions. This method asserts that the hold_request and
+  # message_hash pair don't represent a known condition that we prefer to
+  # ignore as non-error (i.e. "already sent" error or duplicate hold request).
+  # This method returns true if the error is unrecognized - an "actual error".
   def self.is_actually_error?(hold_request, message_hash)
     !self.is_error_type?(message_hash, self.already_sent_errors) || !self.patron_already_has_hold?(hold_request)
   end

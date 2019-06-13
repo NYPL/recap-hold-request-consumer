@@ -1,6 +1,7 @@
 *.gem
 *.rbc
-*.env
+config/var_production.env
+config/var_qa.env
 *.DS_Store
 /.config
 .vscode

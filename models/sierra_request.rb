@@ -85,6 +85,9 @@ class SierraRequest
     response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along.
   end
 
+  # Process json_data (from original kinesis event) and hold_request_data
+  # (instance of HoldRequest, typically identified by json_data.trackingId)
+  #
   # Returns a 404 if initial Hold Request cannot be found.
   # Otherwise, builds the Sierra hold request and posts it.
   def self.process_request(json_data, hold_request_data={})
@@ -124,6 +127,7 @@ class SierraRequest
     sierra_request
   end
 
+  # Fetch holds by patron id via Sierra api
   def get_holds(patron)
     uri = URI.parse("#{self.base_request_url}/patrons/#{patron}/holds")
     request = Net::HTTP::Get.new(uri)
