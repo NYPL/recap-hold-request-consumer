@@ -8,6 +8,7 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 package: ## Package the code for AWS Lambda
 	@echo 'Package the app for deploy'
 	@echo '--------------------------'
+	@BUNDLE_IGNORE_CONFIG=1 bundle install --path vendor
 	@rm -fr $(LAMBDADIR)
 	@rm -fr deploy
 	@mkdir -p $(LAMBDADIR)/lib/ruby

@@ -12,7 +12,8 @@ class SierraRequest
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
   # Technically speaking, they are codes that prevent holds. But we're treating any requests that come through with them as successful.
-  SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NO', 'NR', 'NS', 'NT', 'NU', 'NV', 'NX', 'NY', 'NZ', 'OB', 'OM', 'OP', 'OS', 'OZ', 'QP', 'RR', 'SA', 'SM', 'SP']
+  # TODO: Can we make this data driven using nypl-core?
+  SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NO', 'NR', 'NS', 'NT', 'NU', 'NV', 'NX', 'NY', 'NZ', 'OB', 'OM', 'OP', 'OS', 'OZ', 'QP', 'RR', 'SA', 'SM', 'SP', 'OI']
 
   def initialize(json_data)
     self.json_body = json_data
@@ -84,6 +85,9 @@ class SierraRequest
     response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along.
   end
 
+  # Process json_data (from original kinesis event) and hold_request_data
+  # (instance of HoldRequest, typically identified by json_data.trackingId)
+  #
   # Returns a 404 if initial Hold Request cannot be found.
   # Otherwise, builds the Sierra hold request and posts it.
   def self.process_request(json_data, hold_request_data={})
@@ -123,6 +127,7 @@ class SierraRequest
     sierra_request
   end
 
+  # Fetch holds by patron id via Sierra api
   def get_holds(patron)
     uri = URI.parse("#{self.base_request_url}/patrons/#{patron}/holds")
     request = Net::HTTP::Get.new(uri)

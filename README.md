@@ -96,7 +96,10 @@ The lambda will process using the default credentials from your aws configuratio
 
 ## Deployment
 
-To deploy to an environment, run the corresponding command:
+To deploy to an environment:
+
+1. Make sure you have a `./config/var_deploy.env` with config vars for the target environment, and
+2. Run the corresponding command:
 
 ~~~~
 make deploy_development
