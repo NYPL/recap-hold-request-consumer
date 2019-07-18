@@ -158,3 +158,14 @@ For NCIP:
   * description (should have a title, author, and call number)
   In HOLD_REQUEST_DATA:
   * deliveryLocation
+
+### Testing after deployment
+
+To test real data in the hold request pipeline you'll want to generate an actual hold request using the SCSB UI - ideally modelling the following scenarios:
+
+1. NYPL patron hold request for an NYPL item
+2. NYPL patron hold request for a partner item
+
+Note that testing partner hold requests for NYPL items is a special case of 1. above. The final possible scenario - a partner hold request for a partner item - doesn't touch our systems.
+
+For more info on what's happening, review the [NYPL Patron Hold Request Architecture diagram](https://docs.google.com/presentation/d/1Tmb53yOUett1TLclwkUWa-14EOG9dujAyMdLzXOdOVc/edit#slide=id.g330b256cdf_0_0) and related [workflow documentation](https://github.com/NYPL/lsp_workflows/blob/master/workflows/patron_hold_request.md).
