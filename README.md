@@ -1,5 +1,7 @@
 # Recap Hold Request Consumer
 
+This is a consumer for handling hold requests from ReCAP for NYPL and partner patrons.
+
 ## Purpose
 
 This consumer lambda reads events on the RecapHoldRequest streams and processes them:
