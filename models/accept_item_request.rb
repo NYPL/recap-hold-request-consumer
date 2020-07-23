@@ -88,7 +88,7 @@ class AcceptItemRequest
       require 'net/http'
       require 'uri'
 
-      uri = URI.parse(ENV['NCIP_URL'])
+      uri = URI.parse(Kms.decrypt(ENV['ENCODED_NCIP_URL']))
       request = Net::HTTP::Post.new(uri)
       request.content_type = "application/xml"
       request.body = request_string
