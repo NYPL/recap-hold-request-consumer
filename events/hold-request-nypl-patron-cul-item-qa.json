@@ -1,0 +1,19 @@
+{
+  "Records": [
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "sequenceNumber": "49586053432934900701673372692451976307549532375698374658",
+        "approximateArrivalTimestamp": "2018-09-13T16:39:03.217Z",
+        "data": "mAQABjgxOQAcMjMzMzMwOTA3OTk1MjcAFEFSMDExOTYwNjUAMjIwMTktMDMtMDdUMTM6NTk6NDAtMDU6MDACAAZDVUwCAIADLTIgKzMgU3RlZmFubyBBcmllbnRpLCBNYXNzaW1vIEJhcnRvbGluaSA6IGxhIENvbGxlemlvbmUgZGkgTXVzZWlvbiA9IGRpZSBTYW1tbHVuZyBNdXNlaW9uID0gdGhlIE11c2Vpb24gY29sbGVjdGlvbi4gTWludXMgMiBwbHVzIDMgTWludXMgdHdvIHBsdXMgdGhyZWUgU3RlZmFubyBBcmllbnRpLCBNYXNzaW1vIEJhcnRvbGluaSAgICAgAAAAJE42NDg4Lkk4IEI2NjIgMjAxMQ==",
+        "partitionKey": "5b9a92a72271f"
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventName": "aws:kinesis:record",
+      "awsRegion": "us-east-1",
+      "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/RecapHoldRequest"
+    }
+  ]
+}
