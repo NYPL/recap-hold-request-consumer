@@ -9,7 +9,7 @@ SimpleCov.start do
   add_filter 'vendor/'
   add_filter 'ruby/'
   add_filter 'spec/'
-end
+end unless ENV['TRAVIS'] # Frequently crashes in travis-ci
 
 require 'require_all'
 require_all 'models'
