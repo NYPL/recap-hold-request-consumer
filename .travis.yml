@@ -30,13 +30,15 @@ deploy:
   - RECAP_CLIENT_ID=recap_hold_request_consumer
   - HOLD_REQUESTS_URL=https://qa-platform.nypl.org/api/v0.1
   - HOLD_REQUEST_RESULT_STREAM=HoldRequestResult-qa
+  - LOCATIONS_URL=https://nypl-core-objects-mapping-qa.s3.amazonaws.com/by_recap_customer_code.json
+  - DEFAULT_LOGGING_LEVEL=debug
   skip_cleanup: true
   access_key_id: "$AWS_ACCESS_KEY_ID_QA"
   secret_access_key: "$AWS_SECRET_ACCESS_KEY_QA"
   on:
     branch: qa
 - provider: lambda
-  function_name: RecapHoldRequestConsumer-production-test
+  function_name: RecapHoldRequestConsumer-production
   description: A consumer for handling hold requests from ReCAP.
   region: us-east-1
   role: arn:aws:iam::946183545209:role/lambda-full-access
@@ -55,11 +57,13 @@ deploy:
   - RECAP_CLIENT_ID=recap_hold_request_consumer
   - HOLD_REQUESTS_URL=https://platform.nypl.org/api/v0.1
   - HOLD_REQUEST_RESULT_STREAM=HoldRequestResult-production
+  - LOCATIONS_URL=https://nypl-core-objects-mapping-production.s3.amazonaws.com/by_recap_customer_code.json
+  - DEFAULT_LOGGING_LEVEL=info
   skip_cleanup: true
   access_key_id: "$AWS_ACCESS_KEY_ID_PRODUCTION"
   secret_access_key: "$AWS_SECRET_ACCESS_KEY_PRODUCTION"
   on:
-    branch: native-ruby-to-production
+    branch: master
 notifications:
   email:
     on_failure: always
