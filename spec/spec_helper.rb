@@ -1,5 +1,6 @@
 require 'simplecov'
 require 'dotenv'
+require 'webmock/rspec'
 
 Dotenv.load('./config/var_test.env')
 

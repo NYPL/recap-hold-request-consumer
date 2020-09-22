@@ -9,7 +9,6 @@ gem 'faraday'
 gem 'faraday_middleware'
 gem 'avro'
 gem 'require_all'
-gem 'rspec'
 gem 'simplecov'
 gem 'pry'
 gem 'avromatic'
@@ -17,3 +16,8 @@ gem 'avro-patches'
 gem 'oauth'
 gem 'rubocop', require: false
 gem 'gibberish'
+
+group :test do
+  gem 'rspec'
+  gem 'webmock'
+end

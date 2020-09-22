@@ -25,21 +25,30 @@ describe "authorization" do
     expect(new_sierra_request.bearer).to_not be_nil
   end
 
-  it "should gracefully fail" do 
+  it "should gracefully fail" do
     new_sierra_request = SierraRequest.new({})
-    new_sierra_request.base_request_url = ENV['MOCKY_TIMEOUT_URL']
+
+    # Assert that timeout/500 response results in nil bearer
+    stub_request(:post, "#{ENV['SIERRA_URL']}/token")
+      .to_timeout
     new_sierra_request.assign_bearer
     expect(new_sierra_request.bearer).to be_nil
 
-    new_sierra_request.base_request_url = ENV['MOCKY_404_URL']
+    # Assert that 404 response results in nil bearer
+    stub_request(:post, "#{ENV['SIERRA_URL']}/token")
+      .to_return(body: '', status: 404)
     new_sierra_request.assign_bearer
     expect(new_sierra_request.bearer).to be_nil
 
-    new_sierra_request.base_request_url = ENV['MOCKY_500_URL']
+    # Assert that 500 response results in nil bearer
+    stub_request(:post, "#{ENV['SIERRA_URL']}/token")
+      .to_return(body: '', status: 500)
     new_sierra_request.assign_bearer
     expect(new_sierra_request.bearer).to be_nil
 
-    new_sierra_request.base_request_url = {}
+    # Assert that any other http error results in nil bearer
+    stub_request(:post, "#{ENV['SIERRA_URL']}/token")
+      .to_raise(StandardError)
     new_sierra_request.assign_bearer
     expect(new_sierra_request.bearer).to be_nil
   end
@@ -178,28 +187,36 @@ describe SierraRequest do
   end
 end
 
-# Tests using Mocky:
+# Tests using webmock to cover http errors:
 describe SierraRequest do
   before :each do
     allow(Kms).to receive(:decrypt).and_return('decryptedvalue')
   end
 
-  # TODO: These mocky.io tests are producing 500s in travis-ci, although the work locally
-  # We should maybe convert to using webmock
-=begin
-  it "should gracefully fail if requests to sierra return bad responses" do
+  it "should gracefully fail if requests to sierra times out" do
+    # Establish the hold request we'll handle:
     hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}
     bad_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
     bad_sierra_request.assign_bearer
 
-    bad_sierra_request.base_request_url = ENV['MOCKY_TIMEOUT_URL']
+    # Server timeout (which webmock interprets as returning a 500)
+    stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/23338675309/holds/requests")
+      .to_timeout
+    expect(bad_sierra_request.post_request.code).to eq("500")
+
+    # Server timeout where server closes connection with a 408:
+    stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/23338675309/holds/requests")
+      .to_return(body: '', status: 408)
     expect(bad_sierra_request.post_request.code).to eq("408")
 
-    bad_sierra_request.base_request_url = ENV['MOCKY_404_URL']
+    # Server response with 404:
+    stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/23338675309/holds/requests")
+      .to_return(body: '', status: 404)
     expect(bad_sierra_request.post_request.code).to eq("404")
 
-    bad_sierra_request.base_request_url = ENV["MOCKY_500_URL"]
+    # Internet completely broken scenario:
+    stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/23338675309/holds/requests")
+      .to_raise(StandardError)
     expect(bad_sierra_request.post_request.code).to eq("500")
   end
-=end
 end
