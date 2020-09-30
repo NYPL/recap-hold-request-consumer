@@ -1,8 +1,20 @@
 require 'simplecov'
 require 'dotenv'
 require 'webmock/rspec'
+require 'nypl_log_formatter'
+require 'aws-sdk'
 
 Dotenv.load('./config/var_test.env')
+
+$logger = NyplLogFormatter.new(STDOUT, level: ENV['LOG_LEVEL'] || 'error')
+
+Aws.config[:kms] = {
+  stub_responses: {
+    decrypt: {
+      plaintext: 'decrypted'
+    }
+  }
+}
 
 SimpleCov.start do
   add_filter 'test/'

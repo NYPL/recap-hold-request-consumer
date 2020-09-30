@@ -4,8 +4,8 @@ require 'json'
 require 'dotenv'
 require 'require_all'
 require 'io/console'
+require 'nypl_log_formatter'
 
-require_relative 'models/accept_item_request.rb'
 require_relative 'models/stream.rb'
 require_relative 'models/hold_request.rb'
 require_relative 'models/sierra_request.rb'
@@ -14,7 +14,19 @@ require_relative 'models/location.rb'
 require_relative 'models/custom_logger.rb'
 require_relative 'models/kms.rb'
 
+
+def init
+  return if $initialized
+
+  # Instantiate a global logger
+  $logger = NyplLogFormatter.new(STDOUT, level: ENV['LOG_LEVEL'] || 'info')
+
+  $initialized = true
+end
+
 def handle_event(event:, context:)
+  init
+
   event["Records"].each do |kinesis_record|
     begin
       json_data = Stream.decode(kinesis_record["kinesis"]["data"])

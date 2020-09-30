@@ -90,7 +90,7 @@ class SierraRequest
   #
   # Returns a 404 if initial Hold Request cannot be found.
   # Otherwise, builds the Sierra hold request and posts it.
-  def self.process_request(json_data, hold_request_data={})
+  def self.process_nypl_item(json_data, hold_request_data={})
     hold_request = hold_request_data == {} ? HoldRequest.find(json_data["trackingId"]) : hold_request_data
 
     return { "code" => "404", "message" => "Hold request not found." } if hold_request["data"] == nil
@@ -105,6 +105,35 @@ class SierraRequest
     else
       return { "code" => response.code, "message" => response.body }
     end
+  end
+
+  # Process recap_hold_request (from original kinesis event)
+  #
+  # Returns a hash with 'code' and 'message' representing result
+  def self.process_partner_item(recap_hold_request)
+    return {"code" => "404", "message" => "missing hold request id (trackingId)" } unless recap_hold_request['trackingId']
+
+    hold_request = HoldRequest.find(recap_hold_request["trackingId"])
+
+    return {"code" => "404", "message" => "missing hold request data" } if hold_request["data"] == nil
+    return {"code" => "500", "message" => "missing item description data" } if recap_hold_request["description"] == nil
+
+    hold_data = hold_request["data"]
+
+    virtual_record = SierraVirtualRecord.create({
+      item_barcode: recap_hold_request["itemBarcode"],
+      call_number: recap_hold_request["description"]["callNumber"],
+      author: recap_hold_request["description"]["author"],
+      title: recap_hold_request["description"]["title"]
+    })
+
+    # Now that we've localized the partner item as an NYPL item, we can process
+    # it _as_ an NYPL item:
+    translated_recap_hold_request = recap_hold_request.merge({
+      'record' => virtual_record.item_id,
+      'nyplSource' => 'sierra-nypl'
+    })
+    process_nypl_item(translated_recap_hold_request, hold_request)
   end
 
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
