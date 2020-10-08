@@ -1,13 +1,15 @@
-
 # Model represents NYPL hold requests and includes method to post hold to Sierra.
 class SierraRequest
   require 'json'
   require 'net/http'
   require 'uri'
+
   require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
   require_relative 'timeout_response.rb'
+  require_relative 'sierra_virtual_record'
+
   attr_accessor :json_body, :hold_request, :patron_id, :record_number, :pickup_location, :delivery_location, :bearer, :base_request_url
 
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
@@ -42,7 +44,7 @@ class SierraRequest
         self.bearer = JSON.parse(response.body)["access_token"]
       end
     rescue Exception => e
-      CustomLogger.new({"level" => "ERROR", "message" => "Failed to get authorization token for Sierra Request: #{e}", "error_codename" => "BLOTTER"})
+      CustomLogger.new({"level" => "ERROR", "message" => "Failed to get authorization token for Sierra Request: #{e}", "error_codename" => "BLOTTER"}).log_message
       self.bearer = nil
     end
   end
@@ -66,6 +68,7 @@ class SierraRequest
       "recordNumber" => self.record_number.to_i,
       "pickupLocation" => self.pickup_location
     })
+    CustomLogger.new({ "level" => "DEBUG", "message" => "Posting hold-request: #{request.body} to #{uri}" }).log_message
 
     req_options = {
       use_ssl: uri.scheme == "https",
@@ -81,7 +84,7 @@ class SierraRequest
       response = TimeoutResponse.new
     end
 
-    CustomLogger.new({ "level" => "INFO", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
+    CustomLogger.new({ "level" => "DEBUG", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
     response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along.
   end
 
@@ -98,7 +101,6 @@ class SierraRequest
     sierra_request = SierraRequest.build_new_sierra_request(hold_request["data"])
 
     response = sierra_request.post_request
-    CustomLogger.new({ "level" => "INFO", "message" => "#{response}"}).log_message
 
     if response.is_a? String
       return { "code" => response, "message" => "Suppressed." }
@@ -129,17 +131,20 @@ class SierraRequest
 
     # Now that we've localized the partner item as an NYPL item, we can process
     # it _as_ an NYPL item:
-    translated_recap_hold_request = recap_hold_request.merge({
-      'record' => virtual_record.item_id,
-      'nyplSource' => 'sierra-nypl'
-    })
-    process_nypl_item(translated_recap_hold_request, hold_request)
+    translated_hold_request = hold_request
+    translated_hold_request['data']['record'] = virtual_record.item_id
+    translated_hold_request['data']['nyplSource'] = 'sierra-nypl'
+
+    CustomLogger.new("level" => "info", "message" => "Placing hold on virtual record #{virtual_record.item_id}").log_message
+
+    process_nypl_item(recap_hold_request, translated_hold_request)
   end
 
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
   # Also retrieves pickup location code based on presence of pickupLocation or deliveryLocation.
   def self.build_new_sierra_request(hold_request_data)
-    CustomLogger.new("level" => "info", "message" => "Processing Sierra NYPL Request: #{hold_request_data}")
+    CustomLogger.new("level" => "info", "message" => "Processing Sierra NYPL Request: #{hold_request_data}").log_message
+
     sierra_request = SierraRequest.new(hold_request_data)
     sierra_request.patron_id = hold_request_data["patron"]
     sierra_request.record_number = hold_request_data["record"]
@@ -173,7 +178,7 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
-      CustomLogger.new("level" => "ERROR", "message" => "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}")
+      CustomLogger.new("level" => "ERROR", "message" => "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}").log_message
     end
 
     CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message

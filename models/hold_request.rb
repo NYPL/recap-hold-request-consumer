@@ -68,6 +68,7 @@ class HoldRequest
     if owner.scan('nypl').empty?
       CustomLogger.new({ "level" => "INFO", "message" => "Processing partner hold"}).log_message
       response = SierraRequest.process_partner_item(json_data)
+
       RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request, timestamp)
     elsif owner != ""
       CustomLogger.new({ "level" => "INFO", "message" => "Processing NYPL hold"}).log_message

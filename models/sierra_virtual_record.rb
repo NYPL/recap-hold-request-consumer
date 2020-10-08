@@ -1,6 +1,7 @@
 require 'nypl_sierra_api_client'
 
-require_relative 'kms.rb'
+require_relative 'kms'
+require_relative 'errors'
 
 class SierraVirtualRecord
   @@_sierra_client = nil
@@ -16,10 +17,11 @@ class SierraVirtualRecord
   #
   # @return [int] bib id
   def create_bib
-    props = {
-      titles: [@data[:title]],
-      authors: [@data[:author]]
-    }
+    props = {}
+
+    props[:titles] = [@data[:title]] unless (@data[:title] || '').empty?
+    props[:authors] = [@data[:author]] unless (@data[:author] || '').empty?
+
     $logger.debug "Sierra API POST: bibs #{props.to_json}"
     response = self.class.sierra_client.post 'bibs', props
 
