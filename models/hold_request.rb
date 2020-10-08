@@ -60,19 +60,23 @@ class HoldRequest
     owner = ""
 
     if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil
-      CustomLogger.new({"level" => "ERROR", "message" => "Request data missing key information. Cannot proceed. Malformed request. #{json_data}"}).log_message
+      $logger.error "Request data missing key information. Cannot proceed. Malformed request. #{json_data}"
     else
       owner = json_data["owningInstitutionId"].downcase
     end
 
     if owner.scan('nypl').empty?
-      CustomLogger.new({ "level" => "INFO", "message" => "Processing partner hold"}).log_message
+      $logger.info "Processing partner hold"
+
       response = SierraRequest.process_partner_item(json_data)
 
       RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request, timestamp)
+
     elsif owner != ""
-      CustomLogger.new({ "level" => "INFO", "message" => "Processing NYPL hold"}).log_message
+      $logger.info "Processing NYPL hold"
+
       response = SierraRequest.process_nypl_item(json_data)
+
       RequestResult.process_response(response,'SierraRequest',json_data, hold_request, timestamp)
     end
   end

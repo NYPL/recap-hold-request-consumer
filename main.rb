@@ -11,7 +11,6 @@ require_relative 'models/hold_request.rb'
 require_relative 'models/sierra_request.rb'
 require_relative 'models/request_result.rb'
 require_relative 'models/location.rb'
-require_relative 'models/custom_logger.rb'
 require_relative 'models/kms.rb'
 
 
@@ -34,15 +33,15 @@ def handle_event(event:, context:)
       timestamp = kinesis_record["kinesis"]["approximateArrivalTimestamp"]
 
       if hold_request == "404" || hold_request == "500"
-        CustomLogger.new("level" => "ERROR", "message" => "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER").log_message
+        $logger.error "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER"
         RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
       else
-        CustomLogger.new("level" => "INFO", "message" => "Kinesis decoded data.").log_message
-        CustomLogger.new("level" => "INFO", "message" => "Found hold request data.").log_message
+        $logger.info "Kinesis decoded data."
+        $logger.info "Found hold request data."
         HoldRequest.new.route_request_with(json_data, hold_request, timestamp)
       end
     rescue Exception => e
-      CustomLogger.new("level" => "ERROR", "message" => "#{e}", "error_codename" => "ROGET").log_message
+      $logger.error "#{e}", "error_codename" => "ROGET"
     end
   end
 end

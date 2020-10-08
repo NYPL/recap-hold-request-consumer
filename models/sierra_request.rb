@@ -4,7 +4,6 @@ class SierraRequest
   require 'net/http'
   require 'uri'
 
-  require_relative 'custom_logger.rb'
   require_relative 'location.rb'
   require_relative 'kms.rb'
   require_relative 'timeout_response.rb'
@@ -44,7 +43,7 @@ class SierraRequest
         self.bearer = JSON.parse(response.body)["access_token"]
       end
     rescue Exception => e
-      CustomLogger.new({"level" => "ERROR", "message" => "Failed to get authorization token for Sierra Request: #{e}", "error_codename" => "BLOTTER"}).log_message
+      $logger.error "Failed to get authorization token for Sierra Request: #{e}", "error_codename" => "BLOTTER"
       self.bearer = nil
     end
   end
@@ -68,7 +67,7 @@ class SierraRequest
       "recordNumber" => self.record_number.to_i,
       "pickupLocation" => self.pickup_location
     })
-    CustomLogger.new({ "level" => "DEBUG", "message" => "Posting hold-request: #{request.body} to #{uri}" }).log_message
+    $logger.debug "Posting hold-request: #{request.body} to #{uri}"
 
     req_options = {
       use_ssl: uri.scheme == "https",
@@ -80,11 +79,11 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
-      CustomLogger.new({"level" => "ERROR", "message" => "Sierra post_request error: #{e.message}"}).log_message
+      $logger.error "Sierra post_request error: #{e.message}"
       response = TimeoutResponse.new
     end
 
-    CustomLogger.new({ "level" => "DEBUG", "message" => "Sierra Post request response code: #{response.code}, response: #{response.body}"}).log_message
+    $logger.debug "Sierra Post request response code: #{response.code}, response: #{response.body}"
     response # returns empty content, either code 204 if success, 404 if not found, or 500 if error, so passing code along.
   end
 
@@ -135,7 +134,7 @@ class SierraRequest
     translated_hold_request['data']['record'] = virtual_record.item_id
     translated_hold_request['data']['nyplSource'] = 'sierra-nypl'
 
-    CustomLogger.new("level" => "info", "message" => "Placing hold on virtual record #{virtual_record.item_id}").log_message
+    $logger.info "Placing hold on virtual record #{virtual_record.item_id}"
 
     process_nypl_item(recap_hold_request, translated_hold_request)
   end
@@ -143,7 +142,7 @@ class SierraRequest
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
   # Also retrieves pickup location code based on presence of pickupLocation or deliveryLocation.
   def self.build_new_sierra_request(hold_request_data)
-    CustomLogger.new("level" => "info", "message" => "Processing Sierra NYPL Request: #{hold_request_data}").log_message
+    $logger.info "Processing Sierra NYPL Request: #{hold_request_data}"
 
     sierra_request = SierraRequest.new(hold_request_data)
     sierra_request.patron_id = hold_request_data["patron"]
@@ -178,10 +177,10 @@ class SierraRequest
         http.request(request)
       end
     rescue Exception => e
-      CustomLogger.new("level" => "ERROR", "message" => "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}").log_message
+      $logger.error "Error communicating with host: #{uri.hostname}, port: #{uri.port}. Error: #{e.message}"
     end
 
-    CustomLogger.new("level" => "INFO", "message" => "Header: #{response.header}, Body: #{response.body}").log_message
+    $logger.info "Header: #{response.header}, Body: #{response.body}"
     JSON.parse(response.body)
   end
 

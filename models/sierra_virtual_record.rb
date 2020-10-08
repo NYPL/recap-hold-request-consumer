@@ -76,7 +76,7 @@ class SierraVirtualRecord
         oauth_url: "#{ENV['SIERRA_URL']}/token",
         client_id: Kms.decrypt(ENV['ENCODED_SIERRA_ID']),
         client_secret: Kms.decrypt(ENV['ENCODED_SIERRA_SECRET']),
-        log_level: 'debug'
+        log_level: 'error'
       })
     end
 
