@@ -22,23 +22,23 @@ class RequestResult
     if resp.successful?
       return_hash["code"] = "200"
       return_hash["message"] = json_message, resp
-      CustomLogger.new({ "level" => "INFO", "message" => "Message sent to HoldRequestResult #{json_message}, #{resp}"}).log_message
+      $logger.info "Message sent to HoldRequestResult #{json_message}, #{resp}"
     else
       return_hash["code"] = "500"
       return_hash["message"] = json_message, resp
-      CustomLogger.new({ "level" => "ERROR", "message" => "FAILED to send message to HoldRequestResult #{json_message}, #{resp}.", "error_codename" => "FOUNTAIN PEN"}).log_message
+      $logger.error "FAILED to send message to HoldRequestResult #{json_message}, #{resp}."
     end
     return_hash
   end
 
   def self.handle_success(hold_request, type)
-    CustomLogger.new({ "level" => "INFO", "message" => "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
+    $logger.info "Hold request successfully posted. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => true, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => message_result["code"], "type" => type, "message" => message_result["message"]}
   end
 
   def self.handle_500_as_error(hold_request, message, message_hash, type)
-    CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"}).log_message
+    $logger.error "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: #{message_hash["message"]}. ", "error_codename" => "HIGHLIGHTER"
     message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => message }, "holdRequestId" => hold_request["data"]["id"].to_i})
     {"code" => "500", "type" => type}
   end
@@ -71,7 +71,7 @@ class RequestResult
       sierra_request.assign_bearer
       sierra_request.get_holds(patron)
     rescue StandardError => e
-      CustomLogger.new("level" => "ERROR", "message" => "Unable to get holds for patron: #{e.message}")
+      $logger.error "Unable to get holds for patron: #{e.message}"
     end
   end
 
@@ -107,18 +107,19 @@ class RequestResult
 
   def self.handle_retryable_error(json_data, hold_request, type, timestamp)
     if self.there_is_time(timestamp)
-      CustomLogger.new({"level"=> "INFO", "message"=>"Encountered retryable exception" }).log_message
+      $logger.info "Encountered retryable exception"
       sleep(10)
       HoldRequest.new.route_request_with(json_data,hold_request, timestamp)
     else
-      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      $logger.error "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. ", "error_codename" => "HIGHLIGHTER"
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})
       {"code" => "500", "type" => type}
     end
   end
 
   def self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
-    CustomLogger.new({"level"=> "INFO", "message"=>"Received 500 response. Checking error. Message: #{message}" }).log_message
+    $logger.info "Received 500 response. Checking error. Message: #{message}"
+
     if self.is_error_type?(message_hash, self.retryable_errors)
       handle_retryable_error(json_data, hold_request, type, timestamp)
     elsif self.is_error_type?(message_hash, self.timeout_errors)
@@ -132,10 +133,10 @@ class RequestResult
 
   def self.handle_timeout(type, json_data, hold_request, timestamp)
     if there_is_time(timestamp)
-      CustomLogger.new({ "level" => "ERROR", "message" => "HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Hold request timeout out. Will retry. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      $logger.error "HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Hold request timeout out. Will retry. ", "error_codename" => "HIGHLIGHTER"
       HoldRequest.new.route_request_with(json_data,hold_request, timestamp)
     else
-      CustomLogger.new({ "level" => "ERROR", "message" => "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. Will not retry. ", "error_codename" => "HIGHLIGHTER"}).log_message
+      $logger.error "Request errored out. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}. Message Name: Request timed out. Will not retry. ", "error_codename" => "HIGHLIGHTER"
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-error", "message" => "Request timed out" }, "holdRequestId" => hold_request["data"]["id"].to_i})
       {"code" => "500", "type" => type}
     end
@@ -144,7 +145,8 @@ class RequestResult
   # Crafts a message to post based on all available information.
   def self.process_response(message_hash,type=nil,json_data=nil,hold_request=nil, timestamp=nil)
     if json_data == nil || hold_request == nil || hold_request["data"] == nil
-      CustomLogger.new({"level" => "ERROR", "message" => "Hold request failed. Key information missing or hold request data not found."}).log_message
+      $logger.error "Hold request failed. Key information missing or hold request data not found."
+
       message_result = RequestResult.send_message({"jobId" => "", "success" => false, "error" => { "type" => "key-information-missing", "message" => "500: Hold request failed. Key information missing or hold request data not found" }, "holdRequestId" => json_data["trackingId"].to_i})
       { "code" => "500", "type" => type }
     elsif message_hash["code"] == nil
@@ -153,7 +155,8 @@ class RequestResult
     elsif message_hash["code"] == "200" || message_hash["code"] == "204"
       self.handle_success(hold_request, type)
     elsif message_hash["code"] == "404"
-      CustomLogger.new({ "level" => "INFO", "message" => "Request returned 404. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"}).log_message
+      $logger.info "Request returned 404. HoldRequestId: #{hold_request["data"]["id"]}. JobId: #{hold_request["data"]["jobId"]}"
+
       message_result = RequestResult.send_message({"jobId" => hold_request["data"]["jobId"], "success" => false, "error" => { "type" => "hold-request-not-found", "message" => "404: Hold request not found or deleted. Please try again." }, "holdRequestId" => hold_request["data"]["id"].to_i})
       {"code" => "404", "type" => type}
     else

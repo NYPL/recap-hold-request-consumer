@@ -88,102 +88,168 @@ describe SierraRequest do
     expect(unsuppressed_sierra_req.suppressed?).to eq(false)
   end
 
-  it "should post json message to sierra" do
-    expect(SierraRequest.respond_to?(:process_request)).to eq(true)
-    expect(suppressed_sierra_req.respond_to?(:post_request)).to eq(true)
-  end
+  describe '#process_nypl_item' do
+    it "should gracefully fail if given no data" do 
+      # Anticipate process_nypl_item will attempt to fetch hold data by [non-existant] trackingId:
+      allow(Net::HTTPResponse).to receive(:code).and_return('200')
+      allow(Net::HTTPResponse).to receive(:body)
+        .and_return('{}')
 
-  it "should gracefully fail if given no data" do 
-    # Anticipate process_request will attempt to fetch hold data by [non-existant] trackingId:
-    allow(Net::HTTPResponse).to receive(:code).and_return('200')
-    allow(Net::HTTPResponse).to receive(:body)
-      .and_return('{}')
+      sierra_res = SierraRequest.process_nypl_item({})
+      expect(sierra_res["code"]).to eq("404")
+    end
 
-    sierra_res = SierraRequest.process_request({})
-    expect(sierra_res["code"]).to eq("404")
-  end
+    it "should return 404 if passed garbage data or not enough data and is not suppressed" do
+      # Anticipate process_nypl_item will attempt to fetch hold data by [non-existant] trackingId:
+      allow(Net::HTTPResponse).to receive(:code).and_return('404')
+      allow(Net::HTTPResponse).to receive(:body)
+        .and_return('{}')
 
-  it "should return 404 if passed garbage data or not enough data and is not suppressed" do
-    # Anticipate process_request will attempt to fetch hold data by [non-existant] trackingId:
-    allow(Net::HTTPResponse).to receive(:code).and_return('404')
-    allow(Net::HTTPResponse).to receive(:body)
-      .and_return('{}')
+      sierra_res = SierraRequest.process_nypl_item({ "deliveryLocation" => "COOPER" })
+      expect(sierra_res["code"]).to eq("404")
+      expect(unsuppressed_sierra_req.post_request.code).to eq("404") # because it's missing key ingredients
+    end
 
-    sierra_res = SierraRequest.process_request({"data" => { "deliveryLocation" => "COOPER"}})
-    expect(sierra_res["code"]).to eq("404")
-    expect(unsuppressed_sierra_req.post_request.code).to eq("404") # because it's missing key ingredients
-  end
+    it "should return code from sierra request" do
+      # We anticipate that this will build a SierraRequest object with:
+      #  @json_body={"patron"=>"23338675309", "record"=>"42", "pickupLocation"=>"myf"}
+      #  @delivery_location=nil
+      #  @base_request_url="https://example.com"
+      #  @patron_id="23338675309"
+      #  @record_number="42"
+      #  @pickup_location="myf"
+      # Which will be posted to Sierra api as:
+      #  "{\"recordType\":\"i\",\"recordNumber\":42,\"pickupLocation\":\"myf\"}"
+      # We anticipate the Sierra API responding to the nonsensical record number '42' with http status 500
+      allow(Net::HTTPResponse).to receive(:code).and_return('500')
+      allow(Net::HTTPResponse).to receive(:body)
+        .and_return('{}')
 
-  it "should return code from sierra request" do
-    # We anticipate that this will build a SierraRequest object with:
-    #  @json_body={"patron"=>"23338675309", "record"=>"42", "pickupLocation"=>"myf"}
-    #  @delivery_location=nil
-    #  @base_request_url="https://example.com"
-    #  @patron_id="23338675309"
-    #  @record_number="42"
-    #  @pickup_location="myf"
-    # Which will be posted to Sierra api as:
-    #  "{\"recordType\":\"i\",\"recordNumber\":42,\"pickupLocation\":\"myf\"}"
-    # We anticipate the Sierra API responding to the nonsensical record number '42' with http status 500
-    allow(Net::HTTPResponse).to receive(:code).and_return('500')
-    allow(Net::HTTPResponse).to receive(:body)
-      .and_return('{}')
+      sierra_res = SierraRequest.process_nypl_item({"deliveryLocation" => "NV"}, {"data" => {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}})
+      expect(sierra_res["code"]).to eq("500") # Given the fake nature of the data, it shouldn't work. But at least it should get to the point of knowing that.
+    end
 
-    sierra_res = SierraRequest.process_request({"data" => { "deliveryLocation" => "NV"}}, {"data" => {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}})
-    expect(sierra_res["code"]).to eq("500") # Given the fake nature of the data, it shouldn't work. But at least it should get to the point of knowing that.
-  end
-
-  ['BD', 'NV', 'OI'].each do |location|
-    it "should automatically return 204 if suppressed deliveryLocation '#{location}'" do
-      # Build a fake hold-request instance (so that process_request doesn't
-      # attempt to fetch it itself via [nonexistant] trackingId)::
-      hold_request_data = {
-        "data" => {
-          "patron" => "1234",
-          "record" => "5678",
-          "deliveryLocation" => location
+    ['BD', 'NV', 'OI'].each do |location|
+      it "should automatically return 204 if suppressed deliveryLocation '#{location}'" do
+        # Build a fake hold-request instance (so that process_nypl_item doesn't
+        # attempt to fetch it itself via [nonexistant] trackingId)::
+        hold_request_data = {
+          "data" => {
+            "patron" => "1234",
+            "record" => "5678",
+            "deliveryLocation" => location
+          }
         }
-      }
-      # Normally first param (json_data) would include trackingId, but it's not
-      # needed if we're passing in hold_request instance in second param:
-      sierra_res = SierraRequest.process_request({}, hold_request_data)
-      # Note no http mocking required because code immediately returns success
-      # based on suppressed delivery location code:
-      expect(sierra_res["code"]).to eq("204")
+        # Normally first param (json_data) would include trackingId, but it's not
+        # needed if we're passing in hold_request instance in second param:
+        sierra_res = SierraRequest.process_nypl_item({}, hold_request_data)
+        # Note no http mocking required because code immediately returns success
+        # based on suppressed delivery location code:
+        expect(sierra_res["code"]).to eq("204")
+      end
     end
   end
 
-  it "should build a valid sierra request if given appropriate data" do
-    hold_request_data = {"patron" => "23338675309", "record" => "42", "deliveryLocation" => "NV"}
+  describe '#build_new_sierra_request' do
+    it "should build a valid sierra request if given appropriate data" do
+      hold_request_data = {"patron" => "23338675309", "record" => "42", "deliveryLocation" => "NV"}
 
-    new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
-    expect(new_sierra_request).to_not be(nil)
-    expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
-    expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
-    expect(new_sierra_request.delivery_location).to eq(hold_request_data["deliveryLocation"])
-    expect(new_sierra_request.pickup_location).to eq(Location.get_pickup_for("NV"))
+      new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
+      expect(new_sierra_request).to_not be(nil)
+      expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
+      expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
+      expect(new_sierra_request.pickup_location).to eq(Location.get_pickup_for("NV"))
+    end
+
+    it "should build a sierra request with the provided pickup location if it is provided" do
+      hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}
+      new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
+
+      expect(new_sierra_request).to_not be(nil)
+      expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
+      expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
+      expect(new_sierra_request.delivery_location).to eq(hold_request_data["deliveryLocation"])
+      expect(new_sierra_request.pickup_location).to eq("myf")
+    end
+
+    it "should not be fooled by blank values in the pickup location" do 
+      hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "", "deliveryLocation" => "NV"}
+      new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
+
+      expect(new_sierra_request).to_not be(nil)
+      expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
+      expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
+      expect(new_sierra_request.delivery_location).to eq(hold_request_data["deliveryLocation"])
+      expect(new_sierra_request.pickup_location).to eq(Location.get_pickup_for("NV"))
+    end
   end
+end
 
-  it "should build a sierra request with the provided pickup location if it is provided" do
-    hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}
-    new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
+describe SierraRequest do
+  describe '#process_partner_item' do
 
-    expect(new_sierra_request).to_not be(nil)
-    expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
-    expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
-    expect(new_sierra_request.delivery_location).to eq(hold_request_data["deliveryLocation"])
-    expect(new_sierra_request.pickup_location).to eq("myf")
-  end
+    before(:each) do
+      stub_request(:post, ENV['RECAP_HOLD_REQUEST_AUTH_URL']).to_return(status: 200, body: '{ "access_token": "fake-access-token" }')
 
-  it "should not be fooled by blank values in the pickup location" do 
-    hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "", "deliveryLocation" => "NV"}
-    new_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
+      stub_request(:post, "#{ENV['SIERRA_URL']}/token").to_return(status: 200, body: '{ "access_token": "fake-access-token" }')
 
-    expect(new_sierra_request).to_not be(nil)
-    expect(new_sierra_request.patron_id).to eq(hold_request_data["patron"])
-    expect(new_sierra_request.record_number).to eq(hold_request_data["record"])
-    expect(new_sierra_request.delivery_location).to eq(hold_request_data["deliveryLocation"])
-    expect(new_sierra_request.pickup_location).to eq(Location.get_pickup_for("NV"))
+      stub_request(:post, "#{ENV['SIERRA_URL']}/bibs")
+        .to_return({
+          body: {
+            link: "https://nypl-sierra-test.nypl.org/iii/sierra-api/v6/bibs/1234567"
+          }.to_json,
+          status: 200,
+          headers: { 'Content-type' => 'application/json;charset=UTF-8' }
+        })
+
+      stub_request(:post, "#{ENV['SIERRA_URL']}/items")
+        .to_return({
+          body: {
+            link: "https://nypl-sierra-test.nypl.org/iii/sierra-api/v6/items/56789"
+          }.to_json,
+          status: 200,
+          headers: { 'Content-type' => 'application/json;charset=UTF-8' }
+        })
+    end
+
+    it 'returns 404 if no hold-request or trackingId given' do
+      result = SierraRequest.process_partner_item({})
+      expect(result['code']).to eq('404')
+    end
+
+    it 'places hold request on virtual record' do
+      # Stub a hold-request, which we expect the component to fetch using "trackingId"
+      stub_request(:get, "#{ENV['HOLD_REQUESTS_URL']}/hold-requests/hold-request-id-1234")
+        .to_return({
+          body: {
+            'data' => {
+              'pickupLocation' => 'mal',
+              'patron' => 'patron1234'
+            }
+          }.to_json,
+          status: 200,
+          headers: { 'Content-type' => 'application/json;charset=UTF-8' }
+        })
+
+      # Stub the hold-request POST to Sierra
+      stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/patron1234/holds/requests")
+        .to_return(body: '', status: 204)
+
+      result = SierraRequest.process_partner_item(
+        {
+          'deliveryLocation' => 'NH',
+          'trackingId' => 'hold-request-id-1234',
+          'itemBarcode' => 12345678,
+          'description' => {
+            'author' => 'Author',
+            'title' => 'Title',
+            'callNumber' => 'Call number'
+          }
+        }
+      )
+
+      expect(result).to be_a(Hash)
+    end
   end
 end
 

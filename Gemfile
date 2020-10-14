@@ -16,6 +16,8 @@ gem 'avro-patches'
 gem 'oauth'
 gem 'rubocop', require: false
 gem 'gibberish'
+gem 'nypl_sierra_api_client', '>=1.1.0'
+gem 'nypl_log_formatter', '>=0.1.3'
 
 group :test do
   gem 'rspec'

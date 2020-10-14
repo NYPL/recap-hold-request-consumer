@@ -12,11 +12,11 @@ class Location
       if loc_hash[recap_delivery_code] && loc_hash[recap_delivery_code]["sierraLocation"] && loc_hash[recap_delivery_code]["sierraLocation"]["code"]
         loc_hash[recap_delivery_code]["sierraLocation"]["code"]
       else
-        CustomLogger.new({ "level" => "WARNING", "message" => "Unable to find pickup location for #{recap_delivery_code}"}).log_message
+        $logger.warn "Unable to find pickup location for #{recap_delivery_code}"
         nil
       end
     rescue Exception => e
-      CustomLogger.new({ "level" => "WARNING", "message" => "Unable to find pickup location for #{recap_delivery_code}"}).log_message
+      $logger.warn "Unable to find pickup location for #{recap_delivery_code}"
       nil
     end
   end
