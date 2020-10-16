@@ -41,8 +41,9 @@ class SierraVirtualRecord
       itemType: 50,
       location: 'os',
       barcodes: [@data[:item_barcode]],
-      callNumbers: [@data[:call_number]]
     }
+    props[:callNumbers] = [@data[:call_number]] unless (@data[:call_number] || '').empty?
+
     $logger.debug "Sierra API POST: items #{props.to_json}"
     response = self.class.sierra_client.post 'items', props
 

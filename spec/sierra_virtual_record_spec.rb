@@ -70,9 +70,6 @@ describe SierraVirtualRecord do
         record = SierraVirtualRecord.new({
           title: 'Bib title',
           author: 'Author',
-          bibIds: [999],
-          itemType: 50,
-          location: 'os',
           item_barcode: 12345,
           call_number: 'CALL number'
         })
@@ -115,9 +112,6 @@ describe SierraVirtualRecord do
         props = {
           title: 'Bib title',
           author: 'Author',
-          bibIds: [999],
-          itemType: 50,
-          location: 'os',
           item_barcode: 12345,
           call_number: 'CALL number'
         }
@@ -127,6 +121,42 @@ describe SierraVirtualRecord do
         expect(result.instance_variable_get(:@data)).to be_a(Hash)
         expect(result.instance_variable_get(:@data)[:title]).to eq('Bib title')
         expect(result.item_id).to eq(56789)
+
+        expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/items").
+          with(
+            body: {
+              "bibIds": [ 1234567 ],
+              "itemType": 50,
+              "location": "os",
+              "barcodes": [ 12345 ],
+              "callNumbers": [ 'CALL number' ]
+            },
+            headers: {'Content-Type' => 'application/json'}
+          )
+      end
+
+      it 'creates SierraVirtualRecord instance without call number if call number absent' do
+
+        props = {
+          title: 'Bib title',
+          author: 'Author',
+          item_barcode: 12345
+        }
+        result = SierraVirtualRecord.create props
+
+        expect(result).to be_a(SierraVirtualRecord)
+        expect(result.item_id).to eq(56789)
+
+        expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/items").
+          with(
+            body: {
+              "bibIds": [ 1234567 ],
+              "itemType": 50,
+              "location": "os",
+              "barcodes": [ 12345 ]
+            },
+            headers: {'Content-Type' => 'application/json'}
+          )
       end
     end
   end
