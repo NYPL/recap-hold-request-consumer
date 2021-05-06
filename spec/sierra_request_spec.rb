@@ -66,13 +66,15 @@ describe SierraRequest do
     allow(Kms).to receive(:decrypt).and_return('decryptedvalue')
 
     suppressed_sierra_req = SierraRequest.new({"data" => {}})
-    suppressed_sierra_req.delivery_location     = "NV"
+    suppressed_sierra_req.delivery_location     = "NC"
     suppressed_sierra_req.base_request_url      = ENV['SIERRA_URL']
+
     suppressed_sierra_req.assign_bearer
 
     unsuppressed_sierra_req                     = SierraRequest.new({"data" => {}})
     unsuppressed_sierra_req.delivery_location   = "COOPER"
     unsuppressed_sierra_req.base_request_url    = ENV['SIERRA_URL']
+
     unsuppressed_sierra_req.assign_bearer
   end
 
@@ -129,7 +131,7 @@ describe SierraRequest do
       expect(sierra_res["code"]).to eq("500") # Given the fake nature of the data, it shouldn't work. But at least it should get to the point of knowing that.
     end
 
-    ['BD', 'NV', 'OI'].each do |location|
+    ['BD', 'NC', 'OI'].each do |location|
       it "should automatically return 204 if suppressed deliveryLocation '#{location}'" do
         # Build a fake hold-request instance (so that process_nypl_item doesn't
         # attempt to fetch it itself via [nonexistant] trackingId)::
@@ -249,6 +251,7 @@ describe SierraRequest do
       )
 
       expect(result).to be_a(Hash)
+      p result
     end
   end
 end
@@ -260,6 +263,9 @@ describe SierraRequest do
   end
 
   it "should gracefully fail if requests to sierra times out" do
+    stub_request(:post, "#{ENV['SIERRA_URL']}/token")
+      .to_return(status: 200, body: '{ "access_token": "mock-access-token" }')
+
     # Establish the hold request we'll handle:
     hold_request_data = {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}
     bad_sierra_request = SierraRequest.build_new_sierra_request(hold_request_data)
