@@ -69,3 +69,7 @@ For NCIP:
   * description (should have a title, author, and call number)
   In HOLD_REQUEST_DATA:
   * deliveryLocation
+
+## Contributing
+
+This repo uses the [Development-QA-Main Git Workflow](https://github.com/NYPL/engineering-general/blob/master/standards/git-workflow.md#development-qa-main)
