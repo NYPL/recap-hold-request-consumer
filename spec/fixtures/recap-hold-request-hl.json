@@ -1,0 +1,14 @@
+{
+  "id": 1606,
+  "trackingId": "hold-request-id-1234",
+  "patronBarcode": "23333090799527",
+  "itemBarcode": "32044129220349",
+  "createdDate": "2021-06-01T11:04:51-04:00",
+  "updatedDate": null,
+  "owningInstitutionId": "HL",
+  "description": {
+    "title": "[Standard NYPL restrictions apply] \" ... IZ PENZY V MOSKVU I OBRATNO ...\" : SOVREMENNAIA FILOSOFSKAIA PUBLITSISTIKA = \" ... FROM PENZA TO MOSCOW AND BACK ...\" [RECAP]",
+    "author": "Mi͡asnikov, A. G. author. (Andreĭ Gennadʹevich),   ",
+    "callNumber": null
+  }
+}

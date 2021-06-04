@@ -1,0 +1,14 @@
+{
+  "id": 1605,
+  "trackingId": "hold-request-id-1234",
+  "patronBarcode": "23333090799527",
+  "itemBarcode": "HXTPNA",
+  "createdDate": "2021-06-01T10:09:13-04:00",
+  "updatedDate": null,
+  "owningInstitutionId": "HL",
+  "description": {
+    "title": "[Standard NYPL restrictions apply] \" ... AUF DASS VON DIR DIE NACH-WELT NIMMER SCHWEIGT\" : DIE HERZOGIN ANNA AMALIA BIBLIOTHEK IN WEIMAR NACH DEM BRAND / HERZOGI [HD]",
+    "author": "   ",
+    "callNumber": null
+  }
+}

@@ -212,14 +212,7 @@ describe SierraRequest do
           status: 200,
           headers: { 'Content-type' => 'application/json;charset=UTF-8' }
         })
-    end
 
-    it 'returns 404 if no hold-request or trackingId given' do
-      result = SierraRequest.process_partner_item({})
-      expect(result['code']).to eq('404')
-    end
-
-    it 'places hold request on virtual record' do
       # Stub a hold-request, which we expect the component to fetch using "trackingId"
       stub_request(:get, "#{ENV['HOLD_REQUESTS_URL']}/hold-requests/hold-request-id-1234")
         .to_return({
@@ -236,7 +229,14 @@ describe SierraRequest do
       # Stub the hold-request POST to Sierra
       stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/patron1234/holds/requests")
         .to_return(body: '', status: 204)
+    end
 
+    it 'returns 404 if no hold-request or trackingId given' do
+      result = SierraRequest.process_partner_item({})
+      expect(result['code']).to eq('404')
+    end
+
+    it 'places hold request on virtual record' do
       result = SierraRequest.process_partner_item(
         {
           'deliveryLocation' => 'NH',
@@ -251,7 +251,33 @@ describe SierraRequest do
       )
 
       expect(result).to be_a(Hash)
-      p result
+      expect(result['code']).to eq('204')
+    end
+
+    it 'creates harvard item with title provided by scsb' do
+      result = SierraRequest.process_partner_item(
+        JSON.parse(File.read('./spec/fixtures/recap-hold-request-hl.json'))
+      )
+
+      expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/bibs").
+        with(body: {"titles":["[Standard NYPL restrictions apply] \" ... IZ PENZY V MOSKVU I OBRATNO ...\" : SOVREMENNAIA FILOSOFSKAIA PUBLITSISTIKA = \" ... FROM PENZA TO MOSCOW AND BACK ...\" [RECAP]"],"authors":["Mi͡asnikov, A. G. author. (Andreĭ Gennadʹevich),   "]},
+          headers: {'Content-Type' => 'application/json'})
+
+      expect(result).to be_a(Hash)
+      expect(result['code']).to eq('204')
+    end
+
+    it 'creates harvard HD item with title modified to include "[HD]" prefix' do
+      result = SierraRequest.process_partner_item(
+        JSON.parse(File.read('./spec/fixtures/recap-hold-request-hl-hd.json'))
+      )
+
+      expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/bibs").
+        with(body: {"titles":["[HD] [Standard NYPL restrictions apply] \" ... AUF DASS VON DIR DIE NACH-WELT NIMMER SCHWEIGT\" : DIE HERZOGIN ANNA AMALIA BIBLIOTHEK IN WEIMAR NACH DEM BRAND / HERZOGI [HD]"],"authors":["   "]},
+          headers: {'Content-Type' => 'application/json'})
+
+      expect(result).to be_a(Hash)
+      expect(result['code']).to eq('204')
     end
   end
 end

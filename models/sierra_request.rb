@@ -121,11 +121,17 @@ class SierraRequest
 
     hold_data = hold_request["data"]
 
+    # If title indicates item is in Harvard HD, add [HD] prefix:
+    title = recap_hold_request["description"]["title"] || ''
+    if recap_hold_request['owningInstitutionId'] == 'HL' && title.match(/\[HD\]$/)
+      title = "[HD] #{title}"
+    end
+
     virtual_record = SierraVirtualRecord.create({
       item_barcode: recap_hold_request["itemBarcode"],
       call_number: recap_hold_request["description"]["callNumber"],
       author: recap_hold_request["description"]["author"],
-      title: recap_hold_request["description"]["title"]
+      title: title
     })
 
     # Now that we've localized the partner item as an NYPL item, we can process
