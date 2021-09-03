@@ -16,6 +16,12 @@ class SierraRequest
   # TODO: Can we make this data driven using nypl-core?
   SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NT', 'NU', 'NX', 'NY', 'OB', 'OM', 'OP', 'OS', 'OZ', 'QP', 'RR', 'OI']
 
+  # These location codes are also staff-only locations, but
+  #  1) we do attempt to place a hold on items sent to these locations and
+  #  2) if the hold fails, we should ignore it (because it's probably just a
+  #     suppressed item)
+  HOLD_OPTIONAL_STAFF_LOCATIONS = ['NO', 'NR', 'NS', 'NV', 'NZ', 'SA', 'SM', 'SP']
+
   def initialize(json_data)
     self.json_body = json_data
   end

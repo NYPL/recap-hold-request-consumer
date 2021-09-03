@@ -58,6 +58,10 @@ class RequestResult
     ["Timeout"]
   end
 
+  def self.possible_item_suppressed_errors
+    ['This record is not available']
+  end
+
   def self.is_error_type?(message_hash, error_list)
     hash = JSON.parse(message_hash["message"])
     (hash.is_a? Hash) && (hash["description"].is_a? String) && error_list.any? {|error| hash["description"].include?(error)}
@@ -161,10 +165,20 @@ class RequestResult
       {"code" => "404", "type" => type}
     else
       begin
+        # Did it fail because the record is suppressed?
+        #  e.g. {"code"=>132, "specificCode"=>2, "httpStatus"=>500, "name"=>"XCirc error", "description"=>"XCirc error : This record is not available"}
+        if self.is_error_type?(message_hash, self.possible_item_suppressed_errors) &&
+          hold_request['data']['deliveryLocation'] &&
+          SierraRequest::HOLD_OPTIONAL_STAFF_LOCATIONS.include?(hold_request['data']['deliveryLocation'])
+
+          $logger.info "Detected hold request failure at staff-only location; Quietly swallowing the error. JobId: #{hold_request["data"]["jobId"]}"
+          return self.handle_success(hold_request, type)
+        end
+
         j = JSON.parse(message_hash["message"])
         message = "#{j["httpStatus"]} : #{j["description"]}"
       rescue Exception => e
-        message = "500: recap hold request error. #{message_hash}"
+        message = "500: recap hold request error. #{message_hash}: #{e.message}"
       end
       self.handle_500(hold_request, json_data, message, message_hash, type, timestamp)
     end
