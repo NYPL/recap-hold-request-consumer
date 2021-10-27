@@ -260,8 +260,13 @@ describe SierraRequest do
       )
 
       expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/bibs").
-        with(body: {"titles":["[Standard NYPL restrictions apply] \" ... IZ PENZY V MOSKVU I OBRATNO ...\" : SOVREMENNAIA FILOSOFSKAIA PUBLITSISTIKA = \" ... FROM PENZA TO MOSCOW AND BACK ...\" [RECAP]"],"authors":["Mi͡asnikov, A. G. author. (Andreĭ Gennadʹevich),   "]},
-          headers: {'Content-Type' => 'application/json'})
+        with(body: {
+            "titles": ["[Standard NYPL restrictions apply] \" ... IZ PENZY V MOSKVU I OBRATNO ...\" : SOVREMENNAIA FILOSOFSKAIA PUBLITSISTIKA = \" ... FROM PENZA TO MOSCOW AND BACK ...\" [RECAP]"],
+            "authors": ["Mi͡asnikov, A. G. author. (Andreĭ Gennadʹevich),   "],
+            "varFields": [{"fieldTag":"y","marcTag":"910","subfields":[{"tag":"a","content":"RLOTF"}]}]
+          },
+          headers: {'Content-Type' => 'application/json'}
+        )
 
       expect(result).to be_a(Hash)
       expect(result['code']).to eq('204')
@@ -273,8 +278,13 @@ describe SierraRequest do
       )
 
       expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/bibs").
-        with(body: {"titles":["[HD] [Standard NYPL restrictions apply] \" ... AUF DASS VON DIR DIE NACH-WELT NIMMER SCHWEIGT\" : DIE HERZOGIN ANNA AMALIA BIBLIOTHEK IN WEIMAR NACH DEM BRAND / HERZOGI [HD]"],"authors":["   "]},
-          headers: {'Content-Type' => 'application/json'})
+        with(body: {
+            "titles": ["[HD] [Standard NYPL restrictions apply] \" ... AUF DASS VON DIR DIE NACH-WELT NIMMER SCHWEIGT\" : DIE HERZOGIN ANNA AMALIA BIBLIOTHEK IN WEIMAR NACH DEM BRAND / HERZOGI [HD]"],
+            "authors": ["   "],
+            "varFields": [{"fieldTag":"y","marcTag":"910","subfields":[{"tag":"a","content":"RLOTF"}]}]
+          },
+          headers: {'Content-Type' => 'application/json'}
+        )
 
       expect(result).to be_a(Hash)
       expect(result['code']).to eq('204')
