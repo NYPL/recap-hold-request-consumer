@@ -21,6 +21,14 @@ class SierraVirtualRecord
 
     props[:titles] = [@data[:title]] unless (@data[:title] || '').empty?
     props[:authors] = [@data[:author]] unless (@data[:author] || '').empty?
+    # Add a 910 $a with 'RLOTF', identifying this bib as OTF (to keep it out of RC)
+    props[:varFields] = [
+      {
+        :fieldTag => 'y',
+        :marcTag => '910',
+        :subfields => [ { :tag => 'a', :content => 'RLOTF' } ]
+      }
+    ]
 
     $logger.debug "Sierra API POST: bibs #{props.to_json}"
     response = self.class.sierra_client.post 'bibs', props
