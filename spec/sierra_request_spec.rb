@@ -131,7 +131,7 @@ describe SierraRequest do
       expect(sierra_res["code"]).to eq("500") # Given the fake nature of the data, it shouldn't work. But at least it should get to the point of knowing that.
     end
 
-    ['BD', 'NC', 'OI'].each do |location|
+    ['BD', 'NC', 'OI', 'OL'].each do |location|
       it "should automatically return 204 if suppressed deliveryLocation '#{location}'" do
         # Build a fake hold-request instance (so that process_nypl_item doesn't
         # attempt to fetch it itself via [nonexistant] trackingId)::
