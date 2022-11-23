@@ -14,7 +14,7 @@ class SierraRequest
   # These codes will trigger an automatically successful response being sent to the HoldRequestResult stream.
   # Technically speaking, they are codes that prevent holds. But we're treating any requests that come through with them as successful.
   # TODO: Can we make this data driven using nypl-core?
-  SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NT', 'NU', 'NX', 'NY', 'OB', 'OM', 'OP', 'OS', 'OZ', 'QP', 'RR', 'OI']
+  SUPPRESSION_CODES = ['BD', 'GO', 'IN', 'NC', 'NE', 'NI', 'NK', 'NT', 'NU', 'NX', 'NY', 'OB', 'OL', 'OM', 'OP', 'OS', 'OZ', 'QP', 'RR', 'OI']
 
   # These location codes are also staff-only locations, but
   #  1) we do attempt to place a hold on items sent to these locations and
