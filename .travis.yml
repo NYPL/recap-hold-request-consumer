@@ -15,7 +15,7 @@ deploy:
   description: A consumer for handling hold requests from ReCAP.
   region: us-east-1
   role: arn:aws:iam::946183545209:role/lambda-full-access
-  runtime: ruby2.5
+  runtime: ruby2.7
   module_name: main
   handler_name: handle_event
   timeout: 60
@@ -42,7 +42,7 @@ deploy:
   description: A consumer for handling hold requests from ReCAP.
   region: us-east-1
   role: arn:aws:iam::946183545209:role/lambda-full-access
-  runtime: ruby2.5
+  runtime: ruby2.7
   module_name: main
   handler_name: handle_event
   timeout: 60
@@ -69,4 +69,4 @@ notifications:
     on_failure: always
 env:
   global:
-    secure: ZP8sP3dG646MmFakzB8FEyQh5qYWtMTwpwfW+nDYYadeaEDeykIodqgwWiM7ZT10w3Y2QYMzUsuVp7ghdFr7BWRQEoDFf4vC+aFDesNcsIk14Zl2QG4u8OPEuY3EDnh9ONAuF5AqsSMcVTa7geFuRfA0V587Xdnfrfbn7zRZ1WFpzR/NiNeixELn6pJHlu/qcs05M9vBgcvClLfYodpVLbU5Hf9ZAchgrzRc9oWrOvWySs9tViLiImOzbHpIv/5CQ9hEYtalJlo3fGWlyAzmBJ9QUFCafEsr12/0w5cyOBCBo774ngDPxcMt9fojkDE5ofKtBLSzovs1B/TcHTFNThhCBv7HfjaWYE+50z9Y+HiytshqcL/ovzz0YY4kaQg9N48gzNrUUZgWLGqSR62AQepaZb5BjiWvG+csKkPAtku77OlJ7xCT41GnNdSs02Eup45M7ioDuavsU0ewEvC0+Yxm02jaqoyOY4RGWofpIHAHDsxkCbBc/ffD59oCMSDQkDV7p713IwooF2mWvgLAVxkisJmj9GH+flBE+ocqyEU+F1m0xdpUHHzG+nv+cvFjZDxyK5qPnSuA1iR/9950OAVEurGUxY+J6jA/LOMBrfo2Ifj+tU8mdaY3QxCLyEX8tQlQIB86m1stvL9FblHZ4zhsHGvC817sMpzH0Bt7KC4=
+    secure: Danb7s+IU9n+xJHKDtuRUrWJmWCJlVEj1UQoyzebUQnUnvuxVjDX2bHMPz1zZxoGdKDdzT5qPvd6K3R8F6DBcH+EF2s0YdcaLfKVndBvlM2j/uXKNoFCA8IhYs5JkLQMnICy/leMsCtGcFlLF/tQNr0UIS2vy8aG09dY+7VJurcGMEGpDcz2Uxx8znW8THRaa7Y7GIi/njVfhysWXyVrlvLS4eJVsVb95vr3/btdAegdIVtNG6R9ob6l4tXUq+G6xhIqhLy2H7yzUMDRG/oimvRkn2SGN/9b/TE8uC50ZTee9Ixq7PDUfJXpNQgH2dakLI5WOqd0ET81Z3XGhmkc8KXtpuCkCdNOFpVgtWddtzTc/mBqNNTUJ15G+jFFcZf9HuGXZzaCej/fRnw4GBIF9e8IaghjmBL/qaedtayMPtNnD0v/JQw39EPOYbCg9tKvT/sV3fFQFqvSkU2tBSfsSLDd5/sqeUZBo8HN+//dCxZnNd6iZT1WJJQz4dt1X3tQFxcAA7C4694pLowjz2VxIzvH/NzcyiqlSAUEYs++n0jVoW2mLdWe1Hx3Lc2wTZLltKlOMYapaeMFsdaUvew0gvahSQfQZIqNbAPn5COQowWU/jiK/d05AghAQhRQrmc4Uda5f6/AV8K1y+9F1uzwmItYAps3E0ozuqeF3XajYsc=
