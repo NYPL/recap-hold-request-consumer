@@ -214,12 +214,14 @@ describe SierraRequest do
         })
 
       # Stub a hold-request, which we expect the component to fetch using "trackingId"
-      stub_request(:get, "#{ENV['HOLD_REQUESTS_URL']}/hold-requests/hold-request-id-1234")
+      stub_request(:get, "#{ENV['PLATFORM_API_BASE_URL']}/hold-requests/hold-request-id-1234")
         .to_return({
           body: {
             'data' => {
               'pickupLocation' => 'mal',
-              'patron' => 'patron1234'
+              'patron' => 'patron1234',
+              'record' => '6789',
+              'nyplSource' => 'recap-zzz'
             }
           }.to_json,
           status: 200,
@@ -288,6 +290,36 @@ describe SierraRequest do
 
       expect(result).to be_a(Hash)
       expect(result['code']).to eq('204')
+    end
+
+    it 'places hold request on virtual record, passing in partner item data' do
+      result = SierraRequest.process_partner_item(
+        {
+          'deliveryLocation' => 'NH',
+          'trackingId' => 'hold-request-id-1234',
+          'itemBarcode' => 12345678,
+          'description' => {
+            'author' => 'Author',
+            'title' => 'Title',
+            'callNumber' => 'Call number'
+          }
+        }
+      )
+
+      expect(result).to be_a(Hash)
+      expect(result['code']).to eq('204')
+
+      expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/items")
+        .with(body: {
+          bibIds: [1234567],
+          itemType: 50,
+          location: 'os',
+          barcodes: [12345678],
+          callNumbers: ['Call number'],
+          internalNotes: [
+            'Original item: https://example.com/api/v0.1/items/recap-zzz/6789'
+          ]
+        }.to_json)
     end
   end
 end

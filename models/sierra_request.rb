@@ -137,7 +137,9 @@ class SierraRequest
       item_barcode: recap_hold_request["itemBarcode"],
       call_number: recap_hold_request["description"]["callNumber"],
       author: recap_hold_request["description"]["author"],
-      title: title
+      title: title,
+      item_id: hold_data['record'],
+      item_nypl_source: hold_data['nyplSource'],
     })
 
     # Now that we've localized the partner item as an NYPL item, we can process
