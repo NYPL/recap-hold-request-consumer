@@ -28,17 +28,17 @@ def handle_event(event:, context:)
 
   event["Records"].each do |kinesis_record|
     begin
-      json_data = Stream.decode(kinesis_record["kinesis"]["data"])
-      hold_request = HoldRequest.find json_data["trackingId"]
+      event_data = Stream.decode(kinesis_record["kinesis"]["data"])
+      hold_request = HoldRequest.find event_data["trackingId"]
       timestamp = kinesis_record["kinesis"]["approximateArrivalTimestamp"]
 
       if hold_request == "404" || hold_request == "500"
-        $logger.error "No hold request found for #{json_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER"
-        RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => json_data["trackingId"].to_i})
+        $logger.error "No hold request found for #{event_data['trackingId'].to_i}. The hold request API may be down or the database may be unresponsive.", "error_codename" => "ERASER"
+        RequestResult.send_message({"jobId" => "", "success" => false, "holdRequestId" => event_data["trackingId"].to_i})
       else
         $logger.info "Kinesis decoded data."
         $logger.info "Found hold request data."
-        HoldRequest.new.route_request_with(json_data, hold_request, timestamp)
+        HoldRequest.new.route_request_with(event_data, hold_request, timestamp)
       end
     rescue Exception => e
       $logger.error "#{e}", "error_codename" => "ROGET"
