@@ -69,6 +69,8 @@ class SierraRequest
     request["Authorization"] = "Bearer #{self.bearer}"
 
     request.body = JSON.dump({
+      # statgroup code 501 indicates physical request. this was added to 
+      # generate reports on usage of request buttons.
       "statgroup": 501,
       "recordType" => "i", #TODO: This may change at a later date, but for now we are only doing item requests. KAK.
       "recordNumber" => self.record_number.to_i,
