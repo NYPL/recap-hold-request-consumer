@@ -69,6 +69,7 @@ class SierraRequest
     request["Authorization"] = "Bearer #{self.bearer}"
 
     request.body = JSON.dump({
+      "statgroup": 501,
       "recordType" => "i", #TODO: This may change at a later date, but for now we are only doing item requests. KAK.
       "recordNumber" => self.record_number.to_i,
       "pickupLocation" => self.pickup_location
@@ -137,7 +138,9 @@ class SierraRequest
       item_barcode: recap_hold_request["itemBarcode"],
       call_number: recap_hold_request["description"]["callNumber"],
       author: recap_hold_request["description"]["author"],
-      title: title
+      title: title,
+      item_id: hold_data['record'],
+      item_nypl_source: hold_data['nyplSource'],
     })
 
     # Now that we've localized the partner item as an NYPL item, we can process

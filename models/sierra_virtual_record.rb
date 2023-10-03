@@ -52,6 +52,12 @@ class SierraVirtualRecord
     }
     props[:callNumbers] = [@data[:call_number]] unless (@data[:call_number] || '').empty?
 
+    # Add an internal note identifying the partner item:
+    unless @data[:item_nypl_source].nil? or @data[:item_id].nil?
+      item_uri = "#{ENV['PLATFORM_API_BASE_URL']}/items/#{@data[:item_nypl_source]}/#{@data[:item_id]}"
+      props[:internalNotes] = ["Original item: #{item_uri}"]
+    end
+
     $logger.debug "Sierra API POST: items #{props.to_json}"
     response = self.class.sierra_client.post 'items', props
 

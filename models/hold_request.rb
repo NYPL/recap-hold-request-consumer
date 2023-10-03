@@ -32,7 +32,7 @@ class HoldRequest
 
   # Looks up a hold requests via API.
   def self.find(hold_request_id)
-    uri = URI.parse("#{ENV['HOLD_REQUESTS_URL']}/hold-requests/#{hold_request_id}")
+    uri = URI.parse("#{ENV['PLATFORM_API_BASE_URL']}/hold-requests/#{hold_request_id}")
     request = Net::HTTP::Get.new(uri)
     request.content_type = "application/json"
     request["Accept"] = "application/json"
@@ -56,28 +56,28 @@ class HoldRequest
   # Handles the parsing of the hold request.
   # Routes hold requests to post to NCIP if request is a partner hold.
   # Routes hold requests to post to Sierra holds if request is an NYPL hold.
-  def route_request_with(json_data, hold_request, timestamp)
+  def route_request_with(event_data, hold_request, timestamp)
     owner = ""
 
-    if json_data == nil || json_data.count == 0 || json_data["owningInstitutionId"] == nil
-      $logger.error "Request data missing key information. Cannot proceed. Malformed request. #{json_data}"
+    if event_data == nil || event_data.count == 0 || event_data["owningInstitutionId"] == nil
+      $logger.error "Request data missing key information. Cannot proceed. Malformed request. #{event_data}"
     else
-      owner = json_data["owningInstitutionId"].downcase
+      owner = event_data["owningInstitutionId"].downcase
     end
 
     if owner.scan('nypl').empty?
       $logger.info "Processing partner hold"
 
-      response = SierraRequest.process_partner_item(json_data)
+      response = SierraRequest.process_partner_item(event_data)
 
-      RequestResult.process_response(response,'AcceptItemRequest',json_data, hold_request, timestamp)
+      RequestResult.process_response(response, 'AcceptItemRequest', event_data, hold_request, timestamp)
 
     elsif owner != ""
       $logger.info "Processing NYPL hold"
 
-      response = SierraRequest.process_nypl_item(json_data)
+      response = SierraRequest.process_nypl_item(event_data)
 
-      RequestResult.process_response(response,'SierraRequest',json_data, hold_request, timestamp)
+      RequestResult.process_response(response, 'SierraRequest', event_data, hold_request, timestamp)
     end
   end
 end

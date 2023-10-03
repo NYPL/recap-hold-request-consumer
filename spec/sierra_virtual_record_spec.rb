@@ -158,6 +158,32 @@ describe SierraVirtualRecord do
             headers: {'Content-Type' => 'application/json'}
           )
       end
+
+      it 'creates SierraVirtualRecord instance with item URI in internalNote' do
+        props = {
+          title: 'Bib title',
+          author: 'Author',
+          item_barcode: 12345,
+          item_id: 4567,
+          item_nypl_source: 'recap-zzz'
+        }
+        result = SierraVirtualRecord.create props
+
+        expect(result).to be_a(SierraVirtualRecord)
+        expect(result.item_id).to eq(56789)
+
+        expect(WebMock).to have_requested(:post, "#{ENV['SIERRA_URL']}/items").
+          with(
+            body: {
+              "bibIds": [ 1234567 ],
+              "itemType": 50,
+              "location": "os",
+              "barcodes": [ 12345 ],
+              "internalNotes": [ 'Original item: https://example.com/api/v0.1/items/recap-zzz/4567' ]
+            },
+            headers: {'Content-Type' => 'application/json'}
+          )
+      end
     end
   end
 end
