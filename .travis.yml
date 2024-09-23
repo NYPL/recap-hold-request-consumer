@@ -15,7 +15,7 @@ deploy:
   description: A consumer for handling hold requests from ReCAP.
   region: us-east-1
   role: arn:aws:iam::946183545209:role/lambda-full-access
-  runtime: ruby2.7
+  runtime: ruby3.3
   module_name: main
   handler_name: handle_event
   timeout: 60
@@ -42,7 +42,7 @@ deploy:
   description: A consumer for handling hold requests from ReCAP.
   region: us-east-1
   role: arn:aws:iam::946183545209:role/lambda-full-access
-  runtime: ruby2.7
+  runtime: ruby3.3
   module_name: main
   handler_name: handle_event
   timeout: 60
