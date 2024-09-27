@@ -46,10 +46,6 @@ jobs:
             terraform -chdir=provisioning/qa plan -out=plan.out
             terraform -chdir=provisioning/qa import module.base.aws_lambda_function.lambda_instance arn:aws:lambda:us-east-1:946183545209:function:RecapHoldRequestConsumer-qa
           fi
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: 'us-east-1'
 
       - name: Deploy app to QA
         run: |
