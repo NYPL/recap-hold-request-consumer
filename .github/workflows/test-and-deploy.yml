@@ -32,6 +32,9 @@ jobs:
         run: |
           bundle install
       - uses: hashicorp/setup-terraform@v2
+      - name: Initialize Terraform
+        run: |
+          terraform -chdir=provisioning/qa init -input=false
 
       - name: Check and Import Existing Lambda
         run: |
@@ -49,7 +52,6 @@ jobs:
 
       - name: Deploy app to QA
         run: |
-          terraform -chdir=provisioning/qa init -input=false
           terraform -chdir=provisioning/qa apply -auto-approve -input=false
 
   deploy-lambda-production:
