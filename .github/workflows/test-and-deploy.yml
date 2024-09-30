@@ -36,17 +36,6 @@ jobs:
         run: |
           terraform -chdir=provisioning/qa init -input=false
 
-      - name: Check and Import Existing Lambda
-        run: |
-          LAMBDA_EXISTS=$(aws lambda get-function --function-name RecapHoldRequestConsumer-qa 2>&1 || true)
-          if echo "$LAMBDA_EXISTS" | grep "Lambda not found"; then
-            echo "Lambda does not exist, proceeding with creation"
-          else
-            echo "Lambda exists, importing into Terraform state"
-            terraform -chdir=provisioning/qa plan -out=plan.out
-            terraform -chdir=provisioning/qa import module.base.aws_lambda_function.lambda_instance arn:aws:lambda:us-east-1:946183545209:function:RecapHoldRequestConsumer-qa
-          fi
-
       - name: Deploy app to QA
         run: |
           terraform -chdir=provisioning/qa apply -auto-approve -input=false
