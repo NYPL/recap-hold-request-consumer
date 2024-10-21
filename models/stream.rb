@@ -1,6 +1,5 @@
-# Encoding and decoding messages with AVRO schemas. 
+# Encoding and decoding messages with AVRO schemas.
 class Stream
-  require 'aws-sdk'
   require 'base64'
   require 'avro'
   require 'json'
