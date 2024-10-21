@@ -25,3 +25,4 @@ Resources:
           HOLD_REQUESTS_URL: https://qa-platform.nypl.org/api/v0.1
           HOLD_REQUEST_RESULT_STREAM: HoldRequestResult-qa
           LOCATIONS_URL: https://nypl-core-objects-mapping-qa.s3.amazonaws.com/by_recap_customer_code.json
+          PLATFORM_API_BASE_URL: https://qa-platform.nypl.org/api/v0.1
