@@ -1,6 +1,6 @@
 # Class that decrypts sensitive keys stored on AWS. 
 class Kms
-  require 'aws-sdk'
+  require 'aws-sdk-kms'
   require 'base64'
   require 'json'
 
