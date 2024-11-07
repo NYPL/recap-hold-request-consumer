@@ -2,7 +2,7 @@ require 'securerandom'
 
 # Model representing the result message posted to Kinesis stream about everything that has gone on here -- good, bad, or otherwise.
 class RequestResult
-  require 'aws-sdk'
+  require 'aws-sdk-kinesis'
   require_relative './sierra_request.rb'
   require_relative './hold_request.rb'
 
