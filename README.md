@@ -72,4 +72,4 @@ For NCIP:
 
 ## Contributing
 
-This repo uses the [Development-QA-Main Git Workflow](https://github.com/NYPL/engineering-general/blob/master/standards/git-workflow.md#development-qa-main)
+This repo uses the [Main-QA-Production Git Workflow](https://github.com/NYPL/engineering-general/blob/main/standards/git-workflow.md#main-qa-production)
