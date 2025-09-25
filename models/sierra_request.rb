@@ -59,6 +59,27 @@ class SierraRequest
     self.delivery_location != nil && SUPPRESSION_CODES.include?(self.delivery_location)
   end
 
+  def delete_record(record_id, record_type)
+    uri = URI.parse("#{self.base_request_url}/#{record_type}s/#{otf_bib_id}")
+    
+    request = Net::HTTP::Post.new(uri)
+    request.content_type = "application/json"
+    request["Authorization"] = "Bearer #{self.bearer}"
+    req_options = {
+      use_ssl: uri.scheme == "https",
+      read_timeout: 10
+    }
+    $logger.debug "Posting #{record_type} deletion for otf #{record_type}: #{record_id} to #{uri}"
+    begin 
+      response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+        http.request(request)
+      end
+    rescue Exception => e
+      $logger.error "Sierra delete #{record_type} error: #{e.message}"
+      response = TimeoutResponse.new
+    end
+
+
   # Posts the processed request to Sierra.
   def post_request
     return "204" if self.suppressed?
@@ -101,7 +122,7 @@ class SierraRequest
   #
   # Returns a 404 if initial Hold Request cannot be found.
   # Otherwise, builds the Sierra hold request and posts it.
-  def self.process_nypl_item(json_data, hold_request_data={})
+  def self.process_item_in_sierra(json_data, hold_request_data={})
     hold_request = hold_request_data == {} ? HoldRequest.find(json_data["trackingId"]) : hold_request_data
 
     return { "code" => "404", "message" => "Hold request not found." } if hold_request["data"] == nil
@@ -152,8 +173,14 @@ class SierraRequest
     translated_hold_request['data']['nyplSource'] = 'sierra-nypl'
 
     $logger.info "Placing hold on virtual record #{virtual_record.item_id}"
-
-    process_nypl_item(recap_hold_request, translated_hold_request)
+    begin
+      post_response = process_item_in_sierra(recap_hold_request, translated_hold_request)
+      if post_response['code'] != '200'
+        raise 'hold request failed'
+    rescue Exception => e
+        $logger.info("Hold request #{recap_hold_request["trackingId"]} failed. Deleting associated OTF record #{virtual_record.bib_id}-#{virtual_record.item_id}")
+        delete_record(virtual_record.item_id, 'item')
+        delete_record(virtual_record.bib_id, 'bib')
   end
 
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
