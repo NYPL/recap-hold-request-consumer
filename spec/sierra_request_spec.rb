@@ -256,6 +256,33 @@ describe SierraRequest do
       expect(result['code']).to eq('204')
     end
 
+    it 'deletes otf records when hold request fails' do
+      stub_request(:post, "#{ENV['SIERRA_URL']}/patrons/patron1234/holds/requests")
+        .to_return(body: '', status: 403)
+      stub_request(:delete, "#{ENV['SIERRA_URL']}/bibs/1234567")
+        .to_return(body: '', status: 204)
+      stub_request(:delete, "#{ENV['SIERRA_URL']}/items/56789")
+        .to_return(body: '', status: 204)
+      result = SierraRequest.process_partner_item(
+        {
+          'deliveryLocation' => 'NH',
+          'trackingId' => 'hold-request-id-1234',
+          'itemBarcode' => 12345678,
+          'description' => {
+            'author' => 'Author',
+            'title' => 'Title',
+            'callNumber' => 'Call number'
+          }
+        }
+      )
+
+      expect(result).to be_a(Hash)
+      expect(result['code']).to eq('403')
+      expect(WebMock).to have_requested(:delete, "#{ENV['SIERRA_URL']}/bibs/1234567")
+      expect(WebMock).to have_requested(:delete, "#{ENV['SIERRA_URL']}/items/56789")
+      
+    end
+
     it 'creates harvard item with title provided by scsb' do
       result = SierraRequest.process_partner_item(
         JSON.parse(File.read('./spec/fixtures/recap-hold-request-hl.json'))
