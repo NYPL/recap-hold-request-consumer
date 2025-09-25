@@ -60,7 +60,7 @@ class SierraRequest
   end
 
   def delete_record(record_id, record_type)
-    uri = URI.parse("#{self.base_request_url}/#{record_type}s/#{otf_bib_id}")
+    uri = URI.parse("#{self.base_request_url}/#{record_type}s/#{record_id}")
     
     request = Net::HTTP::Post.new(uri)
     request.content_type = "application/json"
@@ -176,13 +176,17 @@ class SierraRequest
     $logger.info "Placing hold on virtual record #{virtual_record.item_id}"
     begin
       post_response = process_item_in_sierra(recap_hold_request, translated_hold_request)
-      if post_response['code'] != '200' 
+      if post_response['code'] != '204' 
         raise 'hold request failed'
       end
+      post_response
     rescue
+        sierra_request = SierraRequest.new({})
+        sierra_request.base_request_url = ENV['SIERRA_URL']
+        sierra_request.assign_bearer
         $logger.info("Hold request #{recap_hold_request["trackingId"]} failed. Deleting associated OTF record #{virtual_record.bib_id}-#{virtual_record.item_id}")
-        delete_record(virtual_record.item_id, 'item')
-        delete_record(virtual_record.bib_id, 'bib')
+        sierra_request.delete_record(virtual_record.item_id, 'item')
+        sierra_request.delete_record(virtual_record.bib_id, 'bib')
     end
   end
 
