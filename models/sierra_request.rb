@@ -175,12 +175,14 @@ class SierraRequest
     $logger.info "Placing hold on virtual record #{virtual_record.item_id}"
     begin
       post_response = process_item_in_sierra(recap_hold_request, translated_hold_request)
-      if post_response['code'] != '200'
+      if post_response['code'] != '200' 
         raise 'hold request failed'
-    rescue Exception => e
+      end
+    rescue
         $logger.info("Hold request #{recap_hold_request["trackingId"]} failed. Deleting associated OTF record #{virtual_record.bib_id}-#{virtual_record.item_id}")
         delete_record(virtual_record.item_id, 'item')
         delete_record(virtual_record.bib_id, 'bib')
+    end
   end
 
   # Takes discovered hold request data and builds a valid Sierra requests out of the information provided.
