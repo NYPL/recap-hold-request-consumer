@@ -77,7 +77,8 @@ class SierraRequest
     rescue Exception => e
       $logger.error "Sierra delete #{record_type} error: #{e.message}"
       response = TimeoutResponse.new
-    end
+    end 
+  end
 
 
   # Posts the processed request to Sierra.
