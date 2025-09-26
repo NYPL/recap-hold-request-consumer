@@ -75,7 +75,7 @@ class HoldRequest
     elsif owner != ""
       $logger.info "Processing NYPL hold"
 
-      response = SierraRequest.process_nypl_item(event_data)
+      response = SierraRequest.process_item_in_sierra(event_data)
 
       RequestResult.process_response(response, 'SierraRequest', event_data, hold_request, timestamp)
     end
