@@ -90,24 +90,24 @@ describe SierraRequest do
     expect(unsuppressed_sierra_req.suppressed?).to eq(false)
   end
 
-  describe '#process_nypl_item' do
+  describe '#process_item_in_sierra' do
     it "should gracefully fail if given no data" do 
-      # Anticipate process_nypl_item will attempt to fetch hold data by [non-existant] trackingId:
+      # Anticipate process_item_in_sierra will attempt to fetch hold data by [non-existant] trackingId:
       allow(Net::HTTPResponse).to receive(:code).and_return('200')
       allow(Net::HTTPResponse).to receive(:body)
         .and_return('{}')
 
-      sierra_res = SierraRequest.process_nypl_item({})
+      sierra_res = SierraRequest.process_item_in_sierra({})
       expect(sierra_res["code"]).to eq("404")
     end
 
     it "should return 404 if passed garbage data or not enough data and is not suppressed" do
-      # Anticipate process_nypl_item will attempt to fetch hold data by [non-existant] trackingId:
+      # Anticipate process_item_in_sierra will attempt to fetch hold data by [non-existant] trackingId:
       allow(Net::HTTPResponse).to receive(:code).and_return('404')
       allow(Net::HTTPResponse).to receive(:body)
         .and_return('{}')
 
-      sierra_res = SierraRequest.process_nypl_item({ "deliveryLocation" => "COOPER" })
+      sierra_res = SierraRequest.process_item_in_sierra({ "deliveryLocation" => "COOPER" })
       expect(sierra_res["code"]).to eq("404")
       expect(unsuppressed_sierra_req.post_request.code).to eq("404") # because it's missing key ingredients
     end
@@ -127,13 +127,13 @@ describe SierraRequest do
       allow(Net::HTTPResponse).to receive(:body)
         .and_return('{}')
 
-      sierra_res = SierraRequest.process_nypl_item({"deliveryLocation" => "NV"}, {"data" => {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}})
+      sierra_res = SierraRequest.process_item_in_sierra({"deliveryLocation" => "NV"}, {"data" => {"patron" => "23338675309", "record" => "42", "pickupLocation" => "myf"}})
       expect(sierra_res["code"]).to eq("500") # Given the fake nature of the data, it shouldn't work. But at least it should get to the point of knowing that.
     end
 
     ['BD', 'NC', 'OI', 'OL'].each do |location|
       it "should automatically return 204 if suppressed deliveryLocation '#{location}'" do
-        # Build a fake hold-request instance (so that process_nypl_item doesn't
+        # Build a fake hold-request instance (so that process_item_in_sierra doesn't
         # attempt to fetch it itself via [nonexistant] trackingId)::
         hold_request_data = {
           "data" => {
@@ -144,7 +144,7 @@ describe SierraRequest do
         }
         # Normally first param (json_data) would include trackingId, but it's not
         # needed if we're passing in hold_request instance in second param:
-        sierra_res = SierraRequest.process_nypl_item({}, hold_request_data)
+        sierra_res = SierraRequest.process_item_in_sierra({}, hold_request_data)
         # Note no http mocking required because code immediately returns success
         # based on suppressed delivery location code:
         expect(sierra_res["code"]).to eq("204")
