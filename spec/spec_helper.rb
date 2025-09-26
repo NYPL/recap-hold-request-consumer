@@ -2,7 +2,7 @@ require 'simplecov'
 require 'dotenv'
 require 'webmock/rspec'
 require 'nypl_log_formatter'
-require 'aws-sdk'
+require 'aws-sdk-kms'
 
 Dotenv.load('./config/var_test.env')
 
