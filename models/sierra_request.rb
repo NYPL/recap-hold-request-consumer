@@ -61,7 +61,8 @@ class SierraRequest
 
   def delete_record(record_id, record_type)
     uri = URI.parse("#{self.base_request_url}/#{record_type}s/#{record_id}")
-    request = Net::HTTP::Delete.new(uri)
+    
+    request = Net::HTTP::Post.new(uri)
     request.content_type = "application/json"
     request["Authorization"] = "Bearer #{self.bearer}"
     req_options = {
@@ -186,7 +187,6 @@ class SierraRequest
         $logger.info("Hold request #{recap_hold_request["trackingId"]} failed. Deleting associated OTF record #{virtual_record.bib_id}-#{virtual_record.item_id}")
         sierra_request.delete_record(virtual_record.item_id, 'item')
         sierra_request.delete_record(virtual_record.bib_id, 'bib')
-        post_response
     end
   end
 
