@@ -62,7 +62,7 @@ class SierraRequest
   def delete_record(record_id, record_type)
     uri = URI.parse("#{self.base_request_url}/#{record_type}s/#{record_id}")
     
-    request = Net::HTTP::Post.new(uri)
+    request = Net::HTTP::Delete.new(uri)
     request.content_type = "application/json"
     request["Authorization"] = "Bearer #{self.bearer}"
     req_options = {
